@@ -6,6 +6,10 @@ pub enum RespDataType {
     Integers,
     BulkStrings,
     Arrays,
+    Nulls,
+    Booleans,
+    Doubles,
+    BigNumbers,
 }
 
 impl RespDataType {
@@ -16,6 +20,10 @@ impl RespDataType {
             58 => Self::Integers,
             36 => Self::BulkStrings,
             42 => Self::Arrays,
+            95 => Self::Nulls,
+            35 => Self::Booleans,
+            44 => Self::Doubles,
+            40 => Self::BigNumbers,
             _ => {
                 return Err(anyhow!("NOT_SUPPORTED"));
             }

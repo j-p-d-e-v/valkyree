@@ -1,5 +1,15 @@
+pub mod arrays;
+pub mod big_numbers;
+pub mod booleans;
+pub mod bulk_strings;
+pub mod doubles;
+pub mod helpers;
 pub mod integers;
+pub mod nulls;
 pub mod simple_errors;
 pub mod simple_strings;
+pub use booleans::Booleans;
+pub use bulk_strings::BulkStrings;
+pub use nulls::Nulls;
 pub use simple_errors::SimpleErrors;
 pub use simple_strings::SimpleStrings;
