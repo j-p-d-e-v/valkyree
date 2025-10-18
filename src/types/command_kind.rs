@@ -1,16 +1,20 @@
-use crate::builder::commands::{Auth, AuthConfig, Get, Set};
+use crate::builder::commands::{Auth, AuthConfig, Get, Ping, Raw, Set};
 use serde_json::Value;
 #[derive(Debug, Clone)]
 pub enum CommandKind {
     Auth(AuthConfig),
     Get(String),
     Set(String, Value),
+    Raw(String),
+    Ping,
 }
 impl CommandKind {
     pub fn build(&self) -> anyhow::Result<String> {
         match self {
             Self::Auth(config) => Auth::build(config),
             Self::Get(value) => Get::build(value),
+            Self::Ping => Ping::build(),
+            Self::Raw(message) => Raw::build(message),
             Self::Set(key, value) => Set::build(key, value),
         }
     }

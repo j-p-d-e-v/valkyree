@@ -1,8 +1,8 @@
 use anyhow::anyhow;
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum RespDataType {
-    SimpleString,
-    SimpleError,
+    SimpleStrings,
+    SimpleErrors,
     Integers,
     BulkStrings,
     Arrays,
@@ -11,8 +11,8 @@ pub enum RespDataType {
 impl RespDataType {
     pub fn identify(value: u8) -> anyhow::Result<Self> {
         let value = match value {
-            43 => Self::SimpleString,
-            45 => Self::SimpleError,
+            43 => Self::SimpleStrings,
+            45 => Self::SimpleErrors,
             58 => Self::Integers,
             36 => Self::BulkStrings,
             42 => Self::Arrays,
@@ -51,7 +51,7 @@ pub mod test_resp_data_type {
             },
             TestCase {
                 input: 45,
-                expected: RespDataType::SimpleString,
+                expected: RespDataType::SimpleStrings,
                 result_is_error: false,
                 assert_is_error: true,
             },

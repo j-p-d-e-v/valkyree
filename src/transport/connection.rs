@@ -1,9 +1,6 @@
-use anyhow::anyhow;
-use tokio::io::AsyncWriteExt;
+use std::sync::Arc;
 use tokio::net::TcpStream;
-
-use crate::builder::commands::AuthConfig;
-use crate::types::command_kind::CommandKind;
+use tokio::sync::RwLock;
 
 #[derive(Debug, Clone)]
 pub struct ConnectionConfig {
@@ -22,10 +19,9 @@ impl ConnectionBuilder {
         Self { config }
     }
 
-    pub async fn connect(&self) -> anyhow::Result<TcpStream> {
-        let mut stream = TcpStream::connect("127.0.0.1:6379").await?;
-        todo!("Put more validation here if successfully connected");
-        Ok(())
+    pub async fn connect(&self) -> anyhow::Result<Arc<RwLock<TcpStream>>> {
+        let stream = TcpStream::connect(&self.config.address).await?;
+        Ok(Arc::new(RwLock::new(stream)))
     }
 }
 
@@ -34,7 +30,7 @@ pub mod test_connection {
     use super::*;
 
     #[tokio::test]
-    async fn test() {
+    async fn test_connected() {
         let connection = ConnectionBuilder::new(ConnectionConfig {
             address: "127.0.0.1:6379".to_string(),
             username: Some("myapp".to_string()),
@@ -42,6 +38,18 @@ pub mod test_connection {
         })
         .connect()
         .await;
-        println!("Resut: {:#?}", connection);
+        assert!(connection.is_ok(), "{:#?}", connection.err());
+    }
+
+    #[tokio::test]
+    async fn test_error() {
+        let connection = ConnectionBuilder::new(ConnectionConfig {
+            address: "127.0.0.1:1111".to_string(),
+            username: Some("myapp".to_string()),
+            password: Some("zxczxc123".to_string()),
+        })
+        .connect()
+        .await;
+        assert!(connection.is_err());
     }
 }
