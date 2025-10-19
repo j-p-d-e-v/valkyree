@@ -15,8 +15,10 @@ pub struct ConnectionBuilder {
 }
 
 impl ConnectionBuilder {
-    pub fn new(config: ConnectionConfig) -> Self {
-        Self { config }
+    pub fn new(config: &ConnectionConfig) -> Self {
+        Self {
+            config: config.clone(),
+        }
     }
 
     pub async fn connect(&self) -> anyhow::Result<Arc<RwLock<TcpStream>>> {
@@ -31,7 +33,7 @@ pub mod test_connection {
 
     #[tokio::test]
     async fn test_connected() {
-        let connection = ConnectionBuilder::new(ConnectionConfig {
+        let connection = ConnectionBuilder::new(&ConnectionConfig {
             address: "127.0.0.1:6379".to_string(),
             username: Some("myapp".to_string()),
             password: Some("zxczxc123".to_string()),
@@ -43,7 +45,7 @@ pub mod test_connection {
 
     #[tokio::test]
     async fn test_error() {
-        let connection = ConnectionBuilder::new(ConnectionConfig {
+        let connection = ConnectionBuilder::new(&ConnectionConfig {
             address: "127.0.0.1:1111".to_string(),
             username: Some("myapp".to_string()),
             password: Some("zxczxc123".to_string()),

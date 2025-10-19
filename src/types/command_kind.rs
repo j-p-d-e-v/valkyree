@@ -1,5 +1,5 @@
 use crate::{
-    builder::commands::{delete::Delete, Auth, AuthConfig, Expire, Get, Ping, Raw, Set, Ttl},
+    builder::commands::{Auth, AuthConfig, Expire, Get, Ping, Raw, Set, Ttl, delete::Delete},
     types::ExpiryKind,
 };
 use serde_json::Value;

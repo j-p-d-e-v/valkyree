@@ -53,8 +53,8 @@ pub mod test_execute {
     use super::*;
     use crate::builder::commands::AuthConfig;
     use crate::transport::connection::{ConnectionBuilder, ConnectionConfig};
-    use crate::types::command_kind::CommandKind;
     use crate::types::ExpiryKind;
+    use crate::types::command_kind::CommandKind;
 
     async fn auth(execute: &Execute) -> anyhow::Result<RespDataTypeValue> {
         let auth_command = CommandKind::Auth(AuthConfig {
@@ -67,7 +67,7 @@ pub mod test_execute {
 
     #[tokio::test]
     async fn test_auth() {
-        let connection = ConnectionBuilder::new(ConnectionConfig {
+        let connection = ConnectionBuilder::new(&ConnectionConfig {
             address: "127.0.0.1:6379".to_string(),
             username: Some("myapp".to_string()),
             password: Some("zxczxc123".to_string()),
@@ -90,7 +90,7 @@ pub mod test_execute {
 
     #[tokio::test]
     async fn test_get_not_exists_key() {
-        let connection = ConnectionBuilder::new(ConnectionConfig {
+        let connection = ConnectionBuilder::new(&ConnectionConfig {
             address: "127.0.0.1:6379".to_string(),
             username: Some("myapp".to_string()),
             password: Some("password123".to_string()),
@@ -110,7 +110,7 @@ pub mod test_execute {
 
     #[tokio::test]
     async fn test_set_get() {
-        let connection = ConnectionBuilder::new(ConnectionConfig {
+        let connection = ConnectionBuilder::new(&ConnectionConfig {
             address: "127.0.0.1:6379".to_string(),
             username: Some("myapp".to_string()),
             password: Some("password123".to_string()),
@@ -134,7 +134,7 @@ pub mod test_execute {
 
     #[tokio::test]
     async fn test_set_delete() {
-        let connection = ConnectionBuilder::new(ConnectionConfig {
+        let connection = ConnectionBuilder::new(&ConnectionConfig {
             address: "127.0.0.1:6379".to_string(),
             username: Some("myapp".to_string()),
             password: Some("password123".to_string()),
@@ -159,7 +159,7 @@ pub mod test_execute {
 
     #[tokio::test]
     async fn test_raw() {
-        let connection = ConnectionBuilder::new(ConnectionConfig {
+        let connection = ConnectionBuilder::new(&ConnectionConfig {
             address: "127.0.0.1:6379".to_string(),
             username: None,
             password: None,
@@ -178,7 +178,7 @@ pub mod test_execute {
 
     #[tokio::test]
     async fn test_ping() {
-        let connection = ConnectionBuilder::new(ConnectionConfig {
+        let connection = ConnectionBuilder::new(&ConnectionConfig {
             address: "127.0.0.1:6379".to_string(),
             username: Some("myapp".to_string()),
             password: Some("password123".to_string()),
@@ -201,7 +201,7 @@ pub mod test_execute {
 
     #[tokio::test]
     async fn test_expire_ttl() {
-        let connection = ConnectionBuilder::new(ConnectionConfig {
+        let connection = ConnectionBuilder::new(&ConnectionConfig {
             address: "127.0.0.1:6379".to_string(),
             username: Some("myapp".to_string()),
             password: Some("password123".to_string()),
