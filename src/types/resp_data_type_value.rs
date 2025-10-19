@@ -3,10 +3,10 @@ use num_bigint::BigInt;
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
-pub enum Value {
-    Array(Vec<Value>),
+pub enum RespDataTypeValue {
+    Array(Vec<RespDataTypeValue>),
     String(String),
-    Error(SimpleErrorKind, String),
+    SimpleError(SimpleErrorKind, String),
     Boolean(bool),
     Double(f64),
     Integer(i64),
@@ -16,15 +16,15 @@ pub enum Value {
     NegativeInfinity,
     Nan,
 }
-impl Value {
+impl RespDataTypeValue {
     pub fn is_array(&self) -> bool {
         matches!(self, Self::Array(_))
     }
     pub fn is_string(&self) -> bool {
         matches!(self, Self::String(_))
     }
-    pub fn is_error(&self) -> bool {
-        matches!(self, Self::Error(_, _))
+    pub fn is_simple_error(&self) -> bool {
+        matches!(self, Self::SimpleError(_, _))
     }
     pub fn is_boolean(&self) -> bool {
         matches!(self, Self::Boolean(_))

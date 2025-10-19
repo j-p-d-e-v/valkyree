@@ -1,13 +1,13 @@
 use crate::builder::resp_data_type::RespDataTypeBase;
-use crate::types::SimpleErrorKind;
-use crate::types::Value;
 use crate::types::resp_data_kind::RespDataType;
+use crate::types::RespDataTypeValue;
+use crate::types::SimpleErrorKind;
 
 #[derive(Debug)]
 pub struct SimpleErrors {}
 impl RespDataTypeBase for SimpleErrors {}
 impl SimpleErrors {
-    pub fn build(value: &[u8]) -> anyhow::Result<Value> {
+    pub fn build(value: &[u8]) -> anyhow::Result<RespDataTypeValue> {
         Self::is_data_type(value, RespDataType::SimpleErrors)?;
         let value = Self::get_value(value, true)?;
         let data = String::from_utf8_lossy(&value).to_string();
@@ -27,7 +27,7 @@ impl SimpleErrors {
         } else {
             data
         };
-        Ok(Value::Error(kind, message))
+        Ok(RespDataTypeValue::SimpleError(kind, message))
     }
 }
 
@@ -45,7 +45,7 @@ pub mod test_simple_errors {
             116, 105, 111, 110, 32, 114, 101, 113, 117, 105, 114, 101, 100, 46, 13, 10,
         ]);
         assert_eq!(
-            Value::Error(
+            RespDataTypeValue::SimpleError(
                 SimpleErrorKind::NoAuth,
                 "Authentication required.".to_string()
             ),

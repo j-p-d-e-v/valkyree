@@ -1,5 +1,5 @@
 use crate::builder::resp_data_type::RespParser;
-use crate::types::Value;
+use crate::types::RespDataTypeValue;
 use anyhow::anyhow;
 use std::sync::Arc;
 use tokio::io::AsyncWriteExt;
@@ -17,7 +17,7 @@ impl Execute {
             stream: stream.clone(),
         }
     }
-    pub async fn send(&self, command: &String) -> anyhow::Result<Value> {
+    pub async fn send(&self, command: &String) -> anyhow::Result<RespDataTypeValue> {
         let command = command.as_bytes();
         let stream = self.stream.clone();
         let mut connection = stream.write().await;
@@ -54,6 +54,16 @@ pub mod test_execute {
     use crate::builder::commands::AuthConfig;
     use crate::transport::connection::{ConnectionBuilder, ConnectionConfig};
     use crate::types::command_kind::CommandKind;
+    use crate::types::ExpiryKind;
+
+    async fn auth(execute: &Execute) -> anyhow::Result<RespDataTypeValue> {
+        let auth_command = CommandKind::Auth(AuthConfig {
+            username: Some("myapp".to_string()),
+            password: Some("password123".to_string()),
+        })
+        .build();
+        execute.send(&auth_command.unwrap()).await
+    }
 
     #[tokio::test]
     async fn test_auth() {
@@ -79,6 +89,26 @@ pub mod test_execute {
     }
 
     #[tokio::test]
+    async fn test_get_not_exists_key() {
+        let connection = ConnectionBuilder::new(ConnectionConfig {
+            address: "127.0.0.1:6379".to_string(),
+            username: Some("myapp".to_string()),
+            password: Some("password123".to_string()),
+        })
+        .connect()
+        .await;
+        assert!(connection.is_ok(), "{:#?}", connection.err());
+        let stream = connection.unwrap();
+        let execute = Execute::new(stream).await;
+        auth(&execute).await.unwrap();
+        let get_command = CommandKind::Get("idontexistkey".to_string()).build();
+        assert!(get_command.is_ok(), "{:#?}", get_command.err());
+        let result = execute.send(&get_command.unwrap()).await;
+        assert!(result.is_ok(), "{:#?}", result.is_err());
+        assert_eq!(RespDataTypeValue::Null, result.unwrap());
+    }
+
+    #[tokio::test]
     async fn test_set_get() {
         let connection = ConnectionBuilder::new(ConnectionConfig {
             address: "127.0.0.1:6379".to_string(),
@@ -90,18 +120,41 @@ pub mod test_execute {
         assert!(connection.is_ok(), "{:#?}", connection.err());
         let stream = connection.unwrap();
         let execute = Execute::new(stream).await;
-        let auth_command = CommandKind::Auth(AuthConfig {
-            username: Some("myapp".to_string()),
-            password: Some("password123".to_string()),
-        })
-        .build();
-        assert!(auth_command.is_ok(), "{:#?}", auth_command.err());
-        let _ = execute.send(&auth_command.unwrap()).await;
+        auth(&execute).await.unwrap();
         let set_command =
             CommandKind::Set("testmykey".to_string(), Value::String("hello".to_string())).build();
         assert!(set_command.is_ok(), "{:#?}", set_command.err());
         let result = execute.send(&set_command.unwrap()).await;
         assert!(result.is_ok(), "{:#?}", result.is_err());
+        let get_command = CommandKind::Get("testmykey".to_string()).build();
+        assert!(get_command.is_ok(), "{:#?}", get_command.err());
+        let result = execute.send(&get_command.unwrap()).await;
+        assert!(result.is_ok(), "{:#?}", result.is_err());
+    }
+
+    #[tokio::test]
+    async fn test_set_delete() {
+        let connection = ConnectionBuilder::new(ConnectionConfig {
+            address: "127.0.0.1:6379".to_string(),
+            username: Some("myapp".to_string()),
+            password: Some("password123".to_string()),
+        })
+        .connect()
+        .await;
+        assert!(connection.is_ok(), "{:#?}", connection.err());
+        let stream = connection.unwrap();
+        let execute = Execute::new(stream).await;
+        auth(&execute).await.unwrap();
+        let set_command =
+            CommandKind::Set("deleteme".to_string(), Value::String("hello".to_string())).build();
+        assert!(set_command.is_ok(), "{:#?}", set_command.err());
+        let result = execute.send(&set_command.unwrap()).await;
+        assert!(result.is_ok(), "{:#?}", result.is_err());
+        let delete_command = CommandKind::Delete(vec!["deleteme".to_string()]).build();
+        assert!(delete_command.is_ok(), "{:#?}", delete_command.err());
+        let result = execute.send(&delete_command.unwrap()).await;
+        assert!(result.is_ok(), "{:#?}", result.is_err());
+        assert_eq!(RespDataTypeValue::Integer(1), result.unwrap());
     }
 
     #[tokio::test]
@@ -120,6 +173,55 @@ pub mod test_execute {
         let command = raw_command.unwrap();
         let execute = Execute::new(stream).await;
         let result = execute.send(&command).await;
-        assert!(result.is_err());
+        assert!(result.unwrap().is_simple_error());
+    }
+
+    #[tokio::test]
+    async fn test_ping() {
+        let connection = ConnectionBuilder::new(ConnectionConfig {
+            address: "127.0.0.1:6379".to_string(),
+            username: Some("myapp".to_string()),
+            password: Some("password123".to_string()),
+        })
+        .connect()
+        .await;
+        assert!(connection.is_ok(), "{:#?}", connection.err());
+        let stream = connection.unwrap();
+        let execute = Execute::new(stream).await;
+        auth(&execute).await.unwrap();
+        let ping_command = CommandKind::Ping.build();
+        assert!(ping_command.is_ok(), "{:#?}", ping_command.err());
+        let command = ping_command.unwrap();
+        let result = execute.send(&command).await;
+        assert_eq!(
+            RespDataTypeValue::String("PONG".to_string()),
+            result.unwrap()
+        );
+    }
+
+    #[tokio::test]
+    async fn test_expire_ttl() {
+        let connection = ConnectionBuilder::new(ConnectionConfig {
+            address: "127.0.0.1:6379".to_string(),
+            username: Some("myapp".to_string()),
+            password: Some("password123".to_string()),
+        })
+        .connect()
+        .await;
+        assert!(connection.is_ok(), "{:#?}", connection.err());
+        let stream = connection.unwrap();
+        let execute = Execute::new(stream).await;
+        auth(&execute).await.unwrap();
+        let expire_command =
+            CommandKind::Expire("expireme".to_string(), 10, Some(ExpiryKind::Nx)).build();
+        assert!(expire_command.is_ok(), "{:#?}", expire_command.err());
+        let result = execute.send(&expire_command.unwrap()).await;
+        assert!(result.is_ok(), "{:#?}", result.is_err());
+        assert!(result.unwrap().is_integer());
+        let ttl_command = CommandKind::Ttl("expireme".to_string()).build();
+        assert!(ttl_command.is_ok(), "{:#?}", ttl_command.err());
+        let result = execute.send(&ttl_command.unwrap()).await;
+        assert!(result.is_ok(), "{:#?}", result.is_err());
+        assert!(result.unwrap().is_integer());
     }
 }

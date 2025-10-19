@@ -5,8 +5,13 @@ pub mod get;
 pub mod ping;
 pub mod raw;
 pub mod set;
+pub mod ttl;
 pub use auth::{Auth, AuthConfig};
+pub use delete::Delete;
+pub use expire::Expire;
 pub use get::Get;
 pub use ping::Ping;
 pub use raw::Raw;
 pub use set::Set;
+pub use ttl::Ttl;
+

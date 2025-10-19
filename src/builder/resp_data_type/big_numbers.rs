@@ -1,6 +1,6 @@
 use crate::{
     builder::resp_data_type::RespDataTypeBase,
-    types::{Value, resp_data_kind::RespDataType},
+    types::{resp_data_kind::RespDataType, RespDataTypeValue},
 };
 use anyhow::anyhow;
 use num_bigint::BigInt;
@@ -11,7 +11,7 @@ pub struct BigNumbers {}
 
 impl RespDataTypeBase for BigNumbers {}
 impl BigNumbers {
-    pub fn build(value: &[u8]) -> anyhow::Result<Value> {
+    pub fn build(value: &[u8]) -> anyhow::Result<RespDataTypeValue> {
         Self::is_data_type(value, RespDataType::BigNumbers)?;
         let value = Self::get_value(value, true)?;
         let pattern = Regex::new(r"^-?[0-9]+$")?;
@@ -23,7 +23,7 @@ impl BigNumbers {
         } else {
             return Err(anyhow!("BIG_NUMBERS_PARSING_ERROR".to_string()));
         };
-        Ok(Value::BigNumber(parsed))
+        Ok(RespDataTypeValue::BigNumber(parsed))
     }
 }
 
@@ -134,7 +134,7 @@ pub mod test_big_numbers {
                 got.err()
             );
             assert_eq!(
-                Value::BigNumber(tc.expect),
+                RespDataTypeValue::BigNumber(tc.expect),
                 got.unwrap(),
                 "mismatch for {:?}",
                 tc.input

@@ -1,6 +1,6 @@
 use crate::{
     builder::resp_data_type::RespDataTypeBase,
-    types::{Value, resp_data_kind::RespDataType},
+    types::{resp_data_kind::RespDataType, RespDataTypeValue},
 };
 use anyhow::anyhow;
 
@@ -9,12 +9,12 @@ pub struct Booleans {}
 
 impl RespDataTypeBase for Booleans {}
 impl Booleans {
-    pub fn build(value: &[u8]) -> anyhow::Result<Value> {
+    pub fn build(value: &[u8]) -> anyhow::Result<RespDataTypeValue> {
         Self::is_data_type(value, RespDataType::Booleans)?;
         let value = Self::get_value(value, true)?;
         let value = match String::from_utf8_lossy(&value).to_string().as_str() {
-            "t" => Value::Boolean(true),
-            "f" => Value::Boolean(false),
+            "t" => RespDataTypeValue::Boolean(true),
+            "f" => RespDataTypeValue::Boolean(false),
             _ => {
                 return Err(anyhow!("BOOLEAN_INVALID_VALUE".to_string()));
             }
@@ -34,19 +34,19 @@ pub mod test_booleans {
 
         struct TestCase {
             pub input: Vec<u8>,
-            pub expected: Value,
+            pub expected: RespDataTypeValue,
         }
 
         let test_cases = vec![
             TestCase {
                 // #t\r\n
                 input: vec![identifier, 116, 13, 10], // 't'
-                expected: Value::Boolean(true),
+                expected: RespDataTypeValue::Boolean(true),
             },
             TestCase {
                 // #f\r\n
                 input: vec![identifier, 102, 13, 10], // 'f'
-                expected: Value::Boolean(false),
+                expected: RespDataTypeValue::Boolean(false),
             },
         ];
 

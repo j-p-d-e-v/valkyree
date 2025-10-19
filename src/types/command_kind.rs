@@ -1,4 +1,7 @@
-use crate::builder::commands::{Auth, AuthConfig, Get, Ping, Raw, Set};
+use crate::{
+    builder::commands::{delete::Delete, Auth, AuthConfig, Expire, Get, Ping, Raw, Set, Ttl},
+    types::ExpiryKind,
+};
 use serde_json::Value;
 #[derive(Debug, Clone)]
 pub enum CommandKind {
@@ -6,7 +9,10 @@ pub enum CommandKind {
     Get(String),
     Set(String, Value),
     Raw(String),
+    Delete(Vec<String>),
     Ping,
+    Ttl(String),
+    Expire(String, u64, Option<ExpiryKind>),
 }
 impl CommandKind {
     pub fn build(&self) -> anyhow::Result<String> {
@@ -14,6 +20,9 @@ impl CommandKind {
             Self::Auth(config) => Auth::build(config),
             Self::Get(value) => Get::build(value),
             Self::Ping => Ping::build(),
+            Self::Expire(key, duration, kind) => Expire::build(key, duration, kind),
+            Self::Ttl(key) => Ttl::build(key),
+            Self::Delete(values) => Delete::build(values),
             Self::Raw(message) => Raw::build(message),
             Self::Set(key, value) => Set::build(key, value),
         }

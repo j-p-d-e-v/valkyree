@@ -1,6 +1,6 @@
 use crate::builder::resp_data_type::arrays::Arrays;
 use crate::builder::resp_data_type::{BigNumbers, Booleans, BulkStrings, Doubles, Integers, Nulls};
-use crate::types::Value;
+use crate::types::RespDataTypeValue;
 use crate::{
     builder::resp_data_type::{SimpleErrors, SimpleStrings},
     types::resp_data_kind::RespDataType,
@@ -10,7 +10,7 @@ use anyhow::anyhow;
 pub struct RespParser {}
 
 impl RespParser {
-    pub fn parse(value: &[u8]) -> anyhow::Result<Value> {
+    pub fn parse(value: &[u8]) -> anyhow::Result<RespDataTypeValue> {
         let identifer = match value.first() {
             Some(b) => RespDataType::identify(b.to_owned())?,
             None => {
@@ -40,6 +40,6 @@ pub mod test_result {
         let result = RespParser::parse(&input);
         assert!(result.is_ok(), "{:#?}", result.err());
         let value = result.unwrap();
-        assert_eq!(value, Value::String("OK".to_string()));
+        assert_eq!(value, RespDataTypeValue::String("OK".to_string()));
     }
 }

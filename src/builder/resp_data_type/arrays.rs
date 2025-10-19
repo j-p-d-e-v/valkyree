@@ -1,8 +1,8 @@
+use crate::builder::resp_data_type::helpers::get_length;
 use crate::builder::resp_data_type::RespDataTypeBase;
 use crate::builder::resp_data_type::RespParser;
-use crate::builder::resp_data_type::helpers::get_length;
-use crate::types::Value;
 use crate::types::resp_data_kind::RespDataType;
+use crate::types::RespDataTypeValue;
 use anyhow::anyhow;
 
 #[derive(Debug)]
@@ -49,12 +49,12 @@ impl Arrays {
         }
         data
     }
-    pub fn build(value: &[u8]) -> anyhow::Result<Value> {
+    pub fn build(value: &[u8]) -> anyhow::Result<RespDataTypeValue> {
         Self::is_data_type(value, RespDataType::Arrays)?;
         let value = Self::get_value(value, false)?;
         let (start, length) = get_length(&value)?;
         let resp_values = Self::split_resp_types(&value[start..]);
-        let mut data: Vec<Value> = Vec::new();
+        let mut data: Vec<RespDataTypeValue> = Vec::new();
         for resp_value in resp_values {
             let result = RespParser::parse(&resp_value)?;
             data.push(result);
@@ -62,7 +62,7 @@ impl Arrays {
         if length as usize != data.len() {
             return Err(anyhow!("RESP_LENGTH_ACTUAL_LENGTH_MISMATCHED"));
         }
-        Ok(Value::Array(data))
+        Ok(RespDataTypeValue::Array(data))
     }
 }
 
@@ -76,7 +76,7 @@ pub mod test_arrays {
 
         struct TestCase {
             pub input: Vec<u8>,
-            pub expected: Value,
+            pub expected: RespDataTypeValue,
         }
 
         let test_cases = vec![
@@ -84,7 +84,7 @@ pub mod test_arrays {
                 // *0\r\n
                 // empty array
                 input: vec![identifier, 48, 13, 10],
-                expected: Value::Array(vec![]),
+                expected: RespDataTypeValue::Array(vec![]),
             },
             TestCase {
                 // *2\r\n+hello\r\n:5\r\n
@@ -94,7 +94,10 @@ pub mod test_arrays {
                     43, 104, 101, 108, 108, 111, 13, 10, // +hello\r\n
                     58, 53, 13, 10, // :5\r\n
                 ],
-                expected: Value::Array(vec![Value::String("hello".into()), Value::Integer(5)]),
+                expected: RespDataTypeValue::Array(vec![
+                    RespDataTypeValue::String("hello".into()),
+                    RespDataTypeValue::Integer(5),
+                ]),
             },
             TestCase {
                 // *3\r\n#t\r\n#f\r\n_\r\n
@@ -105,10 +108,10 @@ pub mod test_arrays {
                     35, 102, 13, 10, // #f\r\n
                     95, 13, 10, // _\r\n
                 ],
-                expected: Value::Array(vec![
-                    Value::Boolean(true),
-                    Value::Boolean(false),
-                    Value::Null,
+                expected: RespDataTypeValue::Array(vec![
+                    RespDataTypeValue::Boolean(true),
+                    RespDataTypeValue::Boolean(false),
+                    RespDataTypeValue::Null,
                 ]),
             },
             TestCase {
@@ -124,12 +127,15 @@ pub mod test_arrays {
                     43, 98, 97, 114, 13, 10, // +bar\r\n
                     43, 98, 97, 122, 13, 10, // +baz\r\n
                 ],
-                expected: Value::Array(vec![
-                    Value::Array(vec![Value::Integer(1), Value::Integer(2)]),
-                    Value::Array(vec![
-                        Value::String("foo".into()),
-                        Value::String("bar".into()),
-                        Value::String("baz".into()),
+                expected: RespDataTypeValue::Array(vec![
+                    RespDataTypeValue::Array(vec![
+                        RespDataTypeValue::Integer(1),
+                        RespDataTypeValue::Integer(2),
+                    ]),
+                    RespDataTypeValue::Array(vec![
+                        RespDataTypeValue::String("foo".into()),
+                        RespDataTypeValue::String("bar".into()),
+                        RespDataTypeValue::String("baz".into()),
                     ]),
                 ]),
             },
