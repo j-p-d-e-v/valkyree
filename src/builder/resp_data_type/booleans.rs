@@ -1,4 +1,7 @@
-use crate::{builder::resp_data_type::RespDataTypeBase, types::Value};
+use crate::{
+    builder::resp_data_type::RespDataTypeBase,
+    types::{resp_data_kind::RespDataType, Value},
+};
 use anyhow::anyhow;
 
 #[derive(Debug)]
@@ -7,6 +10,7 @@ pub struct Booleans {}
 impl RespDataTypeBase for Booleans {}
 impl Booleans {
     pub fn build(value: &[u8]) -> anyhow::Result<Value> {
+        Self::is_data_type(value, RespDataType::Booleans)?;
         let value = Self::get_value(value)?;
         let value = match String::from_utf8_lossy(&value).to_string().as_str() {
             "t" => Value::Boolean(true),

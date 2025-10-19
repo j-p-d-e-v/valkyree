@@ -1,4 +1,7 @@
-use crate::{builder::resp_data_type::RespDataTypeBase, types::Value};
+use crate::{
+    builder::resp_data_type::RespDataTypeBase,
+    types::{resp_data_kind::RespDataType, Value},
+};
 
 #[derive(Debug)]
 pub struct Nulls {}
@@ -6,6 +9,7 @@ pub struct Nulls {}
 impl RespDataTypeBase for Nulls {}
 impl Nulls {
     pub fn build(value: &[u8]) -> anyhow::Result<Value> {
+        Self::is_data_type(value, RespDataType::Nulls)?;
         let _ = Self::get_value(value)?;
         Ok(Value::Null)
     }

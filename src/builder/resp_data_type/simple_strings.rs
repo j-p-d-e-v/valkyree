@@ -1,10 +1,12 @@
 use crate::builder::resp_data_type::RespDataTypeBase;
+use crate::types::resp_data_kind::RespDataType;
 use crate::types::Value;
 #[derive(Debug)]
 pub struct SimpleStrings {}
 
 impl SimpleStrings {
     pub fn build(value: &[u8]) -> anyhow::Result<Value> {
+        Self::is_data_type(value, RespDataType::SimpleStrings)?;
         let value = Self::get_value(value)?;
         let value = String::from_utf8_lossy(&value);
         Ok(Value::String(value.to_string()))
@@ -14,8 +16,6 @@ impl RespDataTypeBase for SimpleStrings {}
 
 #[cfg(test)]
 pub mod test_simple_strings {
-    use crate::types::resp_data_kind::RespDataType;
-
     use super::*;
 
     #[test]

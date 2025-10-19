@@ -1,4 +1,7 @@
-use crate::{builder::resp_data_type::RespDataTypeBase, types::Value};
+use crate::{
+    builder::resp_data_type::RespDataTypeBase,
+    types::{resp_data_kind::RespDataType, Value},
+};
 
 #[derive(Debug)]
 pub struct Integers {}
@@ -6,6 +9,7 @@ pub struct Integers {}
 impl RespDataTypeBase for Integers {}
 impl Integers {
     pub fn build(value: &[u8]) -> anyhow::Result<Value> {
+        Self::is_data_type(value, RespDataType::Integers)?;
         let value = Self::get_value(value)?;
         let value = String::from_utf8_lossy(&value);
         let parsed = value.parse::<i64>()?;

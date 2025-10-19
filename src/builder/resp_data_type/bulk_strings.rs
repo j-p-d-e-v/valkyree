@@ -1,5 +1,6 @@
 use crate::builder::resp_data_type::helpers::get_length;
 use crate::builder::resp_data_type::RespDataTypeBase;
+use crate::types::resp_data_kind::RespDataType;
 use crate::types::Value;
 
 #[derive(Debug)]
@@ -8,6 +9,7 @@ pub struct BulkStrings {}
 impl RespDataTypeBase for BulkStrings {}
 impl BulkStrings {
     pub fn build(value: &[u8]) -> anyhow::Result<Value> {
+        Self::is_data_type(value, RespDataType::BulkStrings)?;
         let value = Self::get_value(value)?;
         let l = get_length(&value)?;
         let start = l.0;

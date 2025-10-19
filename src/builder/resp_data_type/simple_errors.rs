@@ -1,4 +1,5 @@
 use crate::builder::resp_data_type::RespDataTypeBase;
+use crate::types::resp_data_kind::RespDataType;
 use crate::types::SimpleErrorKind;
 use crate::types::Value;
 
@@ -7,6 +8,7 @@ pub struct SimpleErrors {}
 impl RespDataTypeBase for SimpleErrors {}
 impl SimpleErrors {
     pub fn build(value: &[u8]) -> anyhow::Result<Value> {
+        Self::is_data_type(value, RespDataType::SimpleErrors)?;
         let value = Self::get_value(value)?;
         let data = String::from_utf8_lossy(&value).to_string();
         let split_data = data

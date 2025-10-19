@@ -1,4 +1,7 @@
-use crate::{builder::resp_data_type::RespDataTypeBase, types::Value};
+use crate::{
+    builder::resp_data_type::RespDataTypeBase,
+    types::{resp_data_kind::RespDataType, Value},
+};
 use anyhow::anyhow;
 use num_bigint::BigInt;
 use regex::Regex;
@@ -9,6 +12,7 @@ pub struct BigNumbers {}
 impl RespDataTypeBase for BigNumbers {}
 impl BigNumbers {
     pub fn build(value: &[u8]) -> anyhow::Result<Value> {
+        Self::is_data_type(value, RespDataType::BigNumbers)?;
         let value = Self::get_value(value)?;
         let pattern = Regex::new(r"^-?[0-9]+$")?;
         if !pattern.is_match(String::from_utf8_lossy(&value).as_ref()) {
