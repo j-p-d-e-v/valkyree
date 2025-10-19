@@ -41,8 +41,8 @@ impl Execute {
                 }
             }
         }
-        let result = RespParser::new(&data);
-        result.get()
+        let result = RespParser::parse(&data)?;
+        Ok(result)
     }
 }
 

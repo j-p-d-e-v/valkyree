@@ -1,6 +1,6 @@
 use crate::{
     builder::resp_data_type::RespDataTypeBase,
-    types::{resp_data_kind::RespDataType, Value},
+    types::{Value, resp_data_kind::RespDataType},
 };
 
 #[derive(Debug)]

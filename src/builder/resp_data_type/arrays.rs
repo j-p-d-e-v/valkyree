@@ -1,8 +1,8 @@
-use crate::builder::resp_data_type::helpers::get_length;
 use crate::builder::resp_data_type::RespDataTypeBase;
 use crate::builder::resp_data_type::RespParser;
-use crate::types::resp_data_kind::RespDataType;
+use crate::builder::resp_data_type::helpers::get_length;
 use crate::types::Value;
+use crate::types::resp_data_kind::RespDataType;
 use anyhow::anyhow;
 
 #[derive(Debug)]
@@ -25,8 +25,10 @@ impl Arrays {
             if v == &10 {
                 lf_flag = true;
             }
-            if let Ok(array) = RespDataType::Arrays.to_decimal() && &array == v {
-               saw_array += 1; 
+            if let Ok(array) = RespDataType::Arrays.to_decimal()
+                && &array == v
+            {
+                saw_array += 1;
             }
             if identifiers.contains(v) && cr_flag && lf_flag {
                 kind_flag = true;
@@ -42,7 +44,7 @@ impl Arrays {
 
             tmp_data.push(*v);
         }
-        if tmp_data.len() > 0 {
+        if !tmp_data.is_empty() {
             data.push(tmp_data);
         }
         data
@@ -54,8 +56,7 @@ impl Arrays {
         let resp_values = Self::split_resp_types(&value[start..]);
         let mut data: Vec<Value> = Vec::new();
         for resp_value in resp_values {
-            let parser = RespParser::new(&resp_value);
-            let result = parser.get()?;
+            let result = RespParser::parse(&resp_value)?;
             data.push(result);
         }
         if length as usize != data.len() {
@@ -79,12 +80,12 @@ pub mod test_arrays {
         }
 
         let test_cases = vec![
-             TestCase {
-                 // *0\r\n
-                 // empty array
-                 input: vec![identifier, 48, 13, 10],
-                 expected: Value::Array(vec![]),
-             },
+            TestCase {
+                // *0\r\n
+                // empty array
+                input: vec![identifier, 48, 13, 10],
+                expected: Value::Array(vec![]),
+            },
             TestCase {
                 // *2\r\n+hello\r\n:5\r\n
                 // [ "hello", 5 ]
@@ -95,21 +96,21 @@ pub mod test_arrays {
                 ],
                 expected: Value::Array(vec![Value::String("hello".into()), Value::Integer(5)]),
             },
-             TestCase {
-                 // *3\r\n#t\r\n#f\r\n_\r\n
-                 // [ true, false, null ]
-                 input: vec![
-                     identifier, 51, 13, 10, // *3\r\n
-                     35, 116, 13, 10, // #t\r\n
-                     35, 102, 13, 10, // #f\r\n
-                     95, 13, 10, // _\r\n
-                 ],
-                 expected: Value::Array(vec![
-                     Value::Boolean(true),
-                     Value::Boolean(false),
-                     Value::Null,
-                 ]),
-             },
+            TestCase {
+                // *3\r\n#t\r\n#f\r\n_\r\n
+                // [ true, false, null ]
+                input: vec![
+                    identifier, 51, 13, 10, // *3\r\n
+                    35, 116, 13, 10, // #t\r\n
+                    35, 102, 13, 10, // #f\r\n
+                    95, 13, 10, // _\r\n
+                ],
+                expected: Value::Array(vec![
+                    Value::Boolean(true),
+                    Value::Boolean(false),
+                    Value::Null,
+                ]),
+            },
             TestCase {
                 // *2\r\n*2\r\n:1\r\n:2\r\n*3\r\n+foo\r\n+bar\r\n+baz\r\n
                 // [ [1, 2], ["foo", "bar", "baz"] ]

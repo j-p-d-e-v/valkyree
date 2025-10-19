@@ -1,7 +1,7 @@
 use crate::builder::resp_data_type::RespDataTypeBase;
-use crate::types::resp_data_kind::RespDataType;
 use crate::types::SimpleErrorKind;
 use crate::types::Value;
+use crate::types::resp_data_kind::RespDataType;
 
 #[derive(Debug)]
 pub struct SimpleErrors {}
