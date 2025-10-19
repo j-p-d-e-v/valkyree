@@ -11,6 +11,7 @@ pub mod simple_errors;
 pub mod simple_strings;
 use crate::types::resp_data_kind::RespDataType;
 use anyhow::anyhow;
+pub use arrays::Arrays;
 pub use big_numbers::BigNumbers;
 pub use booleans::Booleans;
 pub use bulk_strings::BulkStrings;
@@ -20,7 +21,6 @@ pub use nulls::Nulls;
 pub use parser::RespParser;
 pub use simple_errors::SimpleErrors;
 pub use simple_strings::SimpleStrings;
-
 trait RespDataTypeBase {
     fn is_data_type(value: &[u8], identifier: RespDataType) -> anyhow::Result<()> {
         let b = match value.first() {
@@ -37,8 +37,10 @@ trait RespDataTypeBase {
         }
     }
 
-    fn get_value(value: &[u8]) -> anyhow::Result<Vec<u8>> {
-        match value.get(1..value.len() - 2) {
+    // Get the value of the input removing the data type and CRLF (terminator) at the last.
+    fn get_value(value: &[u8], remove_crlf: bool) -> anyhow::Result<Vec<u8>> {
+        let crlf = if remove_crlf { 2 } else { 0 };
+        match value.get(1..value.len() - crlf) {
             Some(data) => Ok(data.to_vec()),
             None => Err(anyhow!("INVALID_CRLF_TERMINATOR")),
         }

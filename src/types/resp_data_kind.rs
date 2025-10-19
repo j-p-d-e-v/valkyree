@@ -1,5 +1,7 @@
 use anyhow::anyhow;
-#[derive(Debug, Clone, PartialEq, Eq)]
+use strum::IntoEnumIterator;
+use strum_macros::EnumIter;
+#[derive(Debug, Clone, PartialEq, Eq, EnumIter)]
 pub enum RespDataType {
     SimpleStrings,
     SimpleErrors,
@@ -13,6 +15,20 @@ pub enum RespDataType {
 }
 
 impl RespDataType {
+    // Returns the decimal equivalent of all resp types.
+    pub fn get_identifiers_decimals() -> Vec<u8> {
+        let mut data: Vec<u8> = Vec::new();
+        for kind in Self::iter() {
+            if let Ok(value) = kind.to_decimal() {
+                data.push(value);
+            }
+        }
+        data.sort();
+        data
+    }
+    // Identify the resp type variant
+    // Parameters
+    // - The decimal value of the resp type. See https://valkey.io/topics/protocol
     pub fn identify(value: u8) -> anyhow::Result<Self> {
         let value = match value {
             43 => Self::SimpleStrings,
@@ -31,6 +47,7 @@ impl RespDataType {
         Ok(value)
     }
 
+    // Converts the resp type variant to decimal
     pub fn to_decimal(&self) -> anyhow::Result<u8> {
         let value = match self {
             Self::SimpleStrings => 43,

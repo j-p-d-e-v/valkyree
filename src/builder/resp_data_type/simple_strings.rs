@@ -7,7 +7,7 @@ pub struct SimpleStrings {}
 impl SimpleStrings {
     pub fn build(value: &[u8]) -> anyhow::Result<Value> {
         Self::is_data_type(value, RespDataType::SimpleStrings)?;
-        let value = Self::get_value(value)?;
+        let value = Self::get_value(value, true)?;
         let value = String::from_utf8_lossy(&value);
         Ok(Value::String(value.to_string()))
     }

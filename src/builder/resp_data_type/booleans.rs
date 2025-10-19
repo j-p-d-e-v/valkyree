@@ -11,7 +11,7 @@ impl RespDataTypeBase for Booleans {}
 impl Booleans {
     pub fn build(value: &[u8]) -> anyhow::Result<Value> {
         Self::is_data_type(value, RespDataType::Booleans)?;
-        let value = Self::get_value(value)?;
+        let value = Self::get_value(value, true)?;
         let value = match String::from_utf8_lossy(&value).to_string().as_str() {
             "t" => Value::Boolean(true),
             "f" => Value::Boolean(false),

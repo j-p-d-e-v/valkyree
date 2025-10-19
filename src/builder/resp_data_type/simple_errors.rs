@@ -9,7 +9,7 @@ impl RespDataTypeBase for SimpleErrors {}
 impl SimpleErrors {
     pub fn build(value: &[u8]) -> anyhow::Result<Value> {
         Self::is_data_type(value, RespDataType::SimpleErrors)?;
-        let value = Self::get_value(value)?;
+        let value = Self::get_value(value, true)?;
         let data = String::from_utf8_lossy(&value).to_string();
         let split_data = data
             .split(" ")

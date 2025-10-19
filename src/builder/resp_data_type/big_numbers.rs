@@ -13,7 +13,7 @@ impl RespDataTypeBase for BigNumbers {}
 impl BigNumbers {
     pub fn build(value: &[u8]) -> anyhow::Result<Value> {
         Self::is_data_type(value, RespDataType::BigNumbers)?;
-        let value = Self::get_value(value)?;
+        let value = Self::get_value(value, true)?;
         let pattern = Regex::new(r"^-?[0-9]+$")?;
         if !pattern.is_match(String::from_utf8_lossy(&value).as_ref()) {
             return Err(anyhow!("BIG_NUMBERS_INVALID_VALUE".to_string()));

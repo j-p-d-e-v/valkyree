@@ -10,7 +10,7 @@ impl RespDataTypeBase for Integers {}
 impl Integers {
     pub fn build(value: &[u8]) -> anyhow::Result<Value> {
         Self::is_data_type(value, RespDataType::Integers)?;
-        let value = Self::get_value(value)?;
+        let value = Self::get_value(value, true)?;
         let value = String::from_utf8_lossy(&value);
         let parsed = value.parse::<i64>()?;
         Ok(Value::Integer(parsed))

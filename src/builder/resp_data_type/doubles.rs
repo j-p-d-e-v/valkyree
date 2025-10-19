@@ -10,7 +10,7 @@ impl RespDataTypeBase for Doubles {}
 impl Doubles {
     pub fn build(value: &[u8]) -> anyhow::Result<Value> {
         Self::is_data_type(value, RespDataType::Doubles)?;
-        let value = Self::get_value(value)?;
+        let value = Self::get_value(value, true)?;
         let value = String::from_utf8_lossy(&value).to_string();
         let parsed = value.parse::<f64>()?;
         let result = if parsed.is_nan() {

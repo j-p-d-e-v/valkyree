@@ -10,7 +10,7 @@ impl RespDataTypeBase for BulkStrings {}
 impl BulkStrings {
     pub fn build(value: &[u8]) -> anyhow::Result<Value> {
         Self::is_data_type(value, RespDataType::BulkStrings)?;
-        let value = Self::get_value(value)?;
+        let value = Self::get_value(value, true)?;
         let l = get_length(&value)?;
         let start = l.0;
         let length = l.1;

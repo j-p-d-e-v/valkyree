@@ -10,7 +10,7 @@ impl RespDataTypeBase for Nulls {}
 impl Nulls {
     pub fn build(value: &[u8]) -> anyhow::Result<Value> {
         Self::is_data_type(value, RespDataType::Nulls)?;
-        let _ = Self::get_value(value)?;
+        let _ = Self::get_value(value, true)?;
         Ok(Value::Null)
     }
 }

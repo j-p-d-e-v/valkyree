@@ -25,25 +25,19 @@ impl RespParser {
         }
     }
 
-    pub fn get_value(&self) -> anyhow::Result<Vec<u8>> {
-        match self.value.get(1..self.value.len() - 2) {
-            Some(data) => Ok(data.to_vec()),
-            None => Err(anyhow!("INVALID_RESULT_VALUE")),
-        }
-    }
     pub fn get(&self) -> anyhow::Result<Value> {
         let data_type = self.get_data_type()?;
-        let valueb = self.get_value()?;
+        let value = &self.value;
         match data_type {
-            RespDataType::SimpleStrings => Ok(SimpleStrings::build(&valueb)?),
-            RespDataType::SimpleErrors => Ok(SimpleErrors::build(&valueb)?),
-            RespDataType::Integers => Ok(Integers::build(&valueb)?),
-            RespDataType::BulkStrings => Ok(BulkStrings::build(&valueb)?),
-            RespDataType::Nulls => Ok(Nulls::build(&valueb)?),
-            RespDataType::Booleans => Ok(Booleans::build(&valueb)?),
-            RespDataType::BigNumbers => Ok(BigNumbers::build(&valueb)?),
-            RespDataType::Doubles => Ok(Doubles::build(&valueb)?),
-            _ => Ok(Value::Null),
+            RespDataType::SimpleStrings => Ok(SimpleStrings::build(&value)?),
+            RespDataType::SimpleErrors => Ok(SimpleErrors::build(&value)?),
+            RespDataType::Integers => Ok(Integers::build(&value)?),
+            RespDataType::BulkStrings => Ok(BulkStrings::build(&value)?),
+            RespDataType::Nulls => Ok(Nulls::build(&value)?),
+            RespDataType::Booleans => Ok(Booleans::build(&value)?),
+            RespDataType::BigNumbers => Ok(BigNumbers::build(&value)?),
+            RespDataType::Doubles => Ok(Doubles::build(&value)?),
+            RespDataType::Arrays => Ok(Arrays::build(&value)?),
         }
     }
 }
@@ -61,17 +55,6 @@ pub mod test_result {
         let data_type = data_type.unwrap();
         assert_eq!(data_type, RespDataType::SimpleStrings);
         assert_ne!(data_type, RespDataType::SimpleErrors);
-    }
-
-    #[test]
-    fn test_value() {
-        let input: Vec<u8> = vec![43, 79, 75, 13, 10]; //+Ok\r\n
-        let result = RespParser::new(&input);
-        let value = result.get_value();
-        assert!(value.is_ok(), "{:#?}", value.err());
-        let value = value.unwrap();
-        assert_eq!(value, vec![79, 75]);
-        assert_ne!(value, vec![79, 75, 13, 10]);
     }
 
     #[test]
