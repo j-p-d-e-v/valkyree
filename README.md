@@ -1,4 +1,4 @@
-# Valkeyree (Development InProgress)
+# Valkeyree
 
 Valkeyree — the messenger between realms.
 
