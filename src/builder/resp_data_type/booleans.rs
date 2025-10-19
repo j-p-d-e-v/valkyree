@@ -1,12 +1,14 @@
-use crate::types::Value;
+use crate::{builder::resp_data_type::RespDataTypeBase, types::Value};
 use anyhow::anyhow;
 
 #[derive(Debug)]
 pub struct Booleans {}
 
+impl RespDataTypeBase for Booleans {}
 impl Booleans {
     pub fn build(value: &[u8]) -> anyhow::Result<Value> {
-        let value = match String::from_utf8_lossy(value).to_string().as_str() {
+        let value = Self::get_value(value)?;
+        let value = match String::from_utf8_lossy(&value).to_string().as_str() {
             "t" => Value::Boolean(true),
             "f" => Value::Boolean(false),
             _ => {
@@ -16,21 +18,38 @@ impl Booleans {
         Ok(value)
     }
 }
-
 #[cfg(test)]
 pub mod test_booleans {
+    use crate::types::resp_data_kind::RespDataType;
+
     use super::*;
 
     #[test]
-    fn test_true() {
-        let result = Booleans::build(&[116]);
-        assert!(result.is_ok(), "{:#?}", result.err());
-        assert_eq!(Value::Boolean(true), result.unwrap());
-    }
-    #[test]
-    fn test_false() {
-        let result = Booleans::build(&[102]);
-        assert!(result.is_ok(), "{:#?}", result.err());
-        assert_eq!(Value::Boolean(false), result.unwrap());
+    fn test_booleans() {
+        let identifier = RespDataType::Booleans.to_decimal().unwrap();
+
+        struct TestCase {
+            pub input: Vec<u8>,
+            pub expected: Value,
+        }
+
+        let test_cases = vec![
+            TestCase {
+                // #t\r\n
+                input: vec![identifier, 116, 13, 10], // 't'
+                expected: Value::Boolean(true),
+            },
+            TestCase {
+                // #f\r\n
+                input: vec![identifier, 102, 13, 10], // 'f'
+                expected: Value::Boolean(false),
+            },
+        ];
+
+        for test_case in test_cases {
+            let result = Booleans::build(&test_case.input);
+            assert!(result.is_ok(), "{:#?}", result.err());
+            assert_eq!(test_case.expected, result.unwrap());
+        }
     }
 }

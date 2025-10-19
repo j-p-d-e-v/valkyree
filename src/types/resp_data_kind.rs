@@ -30,6 +30,21 @@ impl RespDataType {
         };
         Ok(value)
     }
+
+    pub fn to_decimal(&self) -> anyhow::Result<u8> {
+        let value = match self {
+            Self::SimpleStrings => 43,
+            Self::SimpleErrors => 45,
+            Self::Integers => 58,
+            Self::BulkStrings => 36,
+            Self::Arrays => 42,
+            Self::Nulls => 95,
+            Self::Booleans => 35,
+            Self::Doubles => 44,
+            Self::BigNumbers => 40,
+        };
+        Ok(value)
+    }
 }
 
 #[cfg(test)]

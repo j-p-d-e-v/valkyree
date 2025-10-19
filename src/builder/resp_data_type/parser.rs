@@ -31,13 +31,12 @@ impl RespParser {
             None => Err(anyhow!("INVALID_RESULT_VALUE")),
         }
     }
-
     pub fn get(&self) -> anyhow::Result<Value> {
         let data_type = self.get_data_type()?;
         let valueb = self.get_value()?;
         match data_type {
-            RespDataType::SimpleStrings => Ok(SimpleStrings::build(&valueb)),
-            RespDataType::SimpleErrors => Ok(SimpleErrors::build(&valueb)),
+            RespDataType::SimpleStrings => Ok(SimpleStrings::build(&valueb)?),
+            RespDataType::SimpleErrors => Ok(SimpleErrors::build(&valueb)?),
             RespDataType::Integers => Ok(Integers::build(&valueb)?),
             RespDataType::BulkStrings => Ok(BulkStrings::build(&valueb)?),
             RespDataType::Nulls => Ok(Nulls::build(&valueb)?),

@@ -1,4 +1,4 @@
-use crate::types::Value;
+use crate::{builder::resp_data_type::RespDataTypeBase, types::Value};
 use anyhow::anyhow;
 use num_bigint::BigInt;
 use regex::Regex;
@@ -6,100 +6,123 @@ use regex::Regex;
 #[derive(Debug)]
 pub struct BigNumbers {}
 
+impl RespDataTypeBase for BigNumbers {}
 impl BigNumbers {
     pub fn build(value: &[u8]) -> anyhow::Result<Value> {
+        let value = Self::get_value(value)?;
         let pattern = Regex::new(r"^-?[0-9]+$")?;
-        if !pattern.is_match(String::from_utf8_lossy(value).as_ref()) {
+        if !pattern.is_match(String::from_utf8_lossy(&value).as_ref()) {
             return Err(anyhow!("BIG_NUMBERS_INVALID_VALUE".to_string()));
         }
-
-        let parsed = if let Some(value) = BigInt::parse_bytes(value, 10) {
+        let parsed = if let Some(value) = BigInt::parse_bytes(&value, 10) {
             value
         } else {
             return Err(anyhow!("BIG_NUMBERS_PARSING_ERROR".to_string()));
         };
-
         Ok(Value::BigNumber(parsed))
     }
 }
 
 #[cfg(test)]
 pub mod test_big_numbers {
+    use crate::types::resp_data_kind::RespDataType;
+
     use super::*;
     use std::str::FromStr;
+
     #[test]
     fn test_bigint_ok() {
-        struct TestCase<'a> {
-            input: &'a [u8], // ASCII digits with optional leading '-'
+        let identifier = RespDataType::BigNumbers.to_decimal().unwrap();
+
+        struct TestCase {
+            input: Vec<u8>, // '(' + ASCII digits with optional leading '-' + "\r\n"
             expect: BigInt,
         }
 
-        // Hand-written &[u8] literals
-        let cases_static: [TestCase; 8] = [
-            // "0"
+        let mut test_cases: Vec<TestCase> = vec![
+            // "(" "0" "\r\n"
             TestCase {
-                input: &[48],
+                input: vec![identifier, 48, 13, 10],
                 expect: BigInt::from(0),
             },
-            // "-0"  -> normalized to 0
+            // "(" "-0" "\r\n"  -> normalized to 0
             TestCase {
-                input: &[45, 48],
+                input: vec![identifier, 45, 48, 13, 10],
                 expect: BigInt::from(0),
             },
-            // "7"
+            // "(" "7" "\r\n"
             TestCase {
-                input: &[55],
+                input: vec![identifier, 55, 13, 10],
                 expect: BigInt::from(7),
             },
-            // "-1"
+            // "(" "-1" "\r\n"
             TestCase {
-                input: &[45, 49],
+                input: vec![identifier, 45, 49, 13, 10],
                 expect: BigInt::from(-1),
             },
-            // "0000"
+            // "(" "0000" "\r\n"
             TestCase {
-                input: &[48, 48, 48, 48],
+                input: vec![identifier, 48, 48, 48, 48, 13, 10],
                 expect: BigInt::from(0),
             },
-            // "-0005" -> -5
+            // "(" "-0005" "\r\n" -> -5
             TestCase {
-                input: &[45, 48, 48, 48, 53],
+                input: vec![identifier, 45, 48, 48, 48, 53, 13, 10],
                 expect: BigInt::from(-5),
             },
-            // "9223372036854775808" (i64::MAX + 1)
+            // "(" "9223372036854775808" "\r\n" (i64::MAX + 1)
             TestCase {
-                input: &[
-                    57, 50, 50, 51, 51, 55, 50, 48, 51, 54, 56, 53, 52, 55, 55, 53, 56, 48, 56,
-                ],
+                input: {
+                    let mut v = vec![identifier];
+                    v.extend_from_slice(&[
+                        57, 50, 50, 51, 51, 55, 50, 48, 51, 54, 56, 53, 52, 55, 55, 53, 56, 48, 56,
+                    ]);
+                    v.extend_from_slice(&[13, 10]);
+                    v
+                },
                 expect: BigInt::from_str("9223372036854775808").unwrap(),
             },
-            // "-18446744073709551616" (-(u64::MAX + 1))
+            // "(" "-18446744073709551616" "\r\n" (-(u64::MAX + 1))
             TestCase {
-                input: &[
-                    45, 49, 56, 52, 52, 54, 55, 52, 52, 48, 55, 51, 55, 48, 57, 53, 53, 49, 54, 49,
-                    54,
-                ],
+                input: {
+                    let mut v = vec![identifier];
+                    v.extend_from_slice(&[
+                        45, 49, 56, 52, 52, 54, 55, 52, 52, 48, 55, 51, 55, 48, 57, 53, 53, 49, 54,
+                        49, 54,
+                    ]);
+                    v.extend_from_slice(&[13, 10]);
+                    v
+                },
                 expect: BigInt::from_str("-18446744073709551616").unwrap(),
             },
         ];
 
-        // Very large, built at runtime but still &[u8]
+        // Very large, built at runtime
         let huge_pos = "9".repeat(256); // 256-digit positive
         let huge_neg = format!("-{}", "8".repeat(300)); // 300-digit negative
 
-        let cases_dynamic: [TestCase; 2] = [
-            TestCase {
-                input: huge_pos.as_bytes(),
-                expect: BigInt::from_str(&huge_pos).unwrap(),
+        test_cases.push(TestCase {
+            input: {
+                let mut v = vec![identifier];
+                v.extend_from_slice(huge_pos.as_bytes());
+                v.extend_from_slice(&[13, 10]);
+                v
             },
-            TestCase {
-                input: huge_neg.as_bytes(),
-                expect: BigInt::from_str(&huge_neg).unwrap(),
-            },
-        ];
+            expect: BigInt::from_str(&huge_pos).unwrap(),
+        });
 
-        for tc in cases_static.into_iter().chain(cases_dynamic) {
-            let got = BigNumbers::build(tc.input); // your parser for '(' payload
+        test_cases.push(TestCase {
+            input: {
+                let mut v = vec![identifier];
+                v.extend_from_slice(huge_neg.as_bytes());
+                v.extend_from_slice(&[13, 10]);
+                v
+            },
+            expect: BigInt::from_str(&huge_neg).unwrap(),
+        });
+
+        for tc in test_cases {
+            let got = BigNumbers::build(&tc.input); // your parser for '(' payload
             assert!(
                 got.is_ok(),
                 "parse error for {:?}: {:#?}",
@@ -117,12 +140,14 @@ pub mod test_big_numbers {
 
     #[test]
     fn test_bigint_invalid() {
-        // These should be rejected by a strict RESP3 Big Number payload parser.
-        // Rules: base-10 only, optional single leading '-', then digits only; at least one digit.
-        let invalid_inputs: &[&[u8]] = &[
+        let identifier = RespDataType::BigNumbers.to_decimal().unwrap();
+
+        // Invalid RESP3 Big Number payloads:
+        // base-10 only, optional single leading '-', then digits only; at least one digit.
+        let invalid_payloads: &[&[u8]] = &[
             &[],                       // empty
             &[45],                     // "-" only
-            &[43, 49, 50, 51],         // "+123" (plus sign not allowed by spec)
+            &[43, 49, 50, 51],         // "+123" (plus sign not allowed)
             &[32, 49, 50, 51],         // " 123" (leading space)
             &[49, 50, 51, 32],         // "123 " (trailing space)
             &[49, 50, 97, 51],         // "12a3" (non-digit)
@@ -136,9 +161,20 @@ pub mod test_big_numbers {
             &[48, 98, 49, 48, 49, 48], // "0b1010" (binary not allowed)
         ];
 
-        for input in invalid_inputs {
-            let got = BigNumbers::build(input);
-            assert!(got.is_err(), "should fail for invalid payload {:?}", input);
+        for payload in invalid_payloads {
+            let input = {
+                let mut v = vec![identifier];
+                v.extend_from_slice(payload);
+                v.extend_from_slice(&[13, 10]);
+                v
+            };
+            let got = BigNumbers::build(&input);
+            assert!(
+                got.is_err(),
+                "should fail for invalid payload {:?} (framed {:?})",
+                payload,
+                input
+            );
         }
     }
 }
