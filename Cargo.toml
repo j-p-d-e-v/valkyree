@@ -2,6 +2,12 @@
 name = "valkeyree"
 version = "0.1.0"
 edition = "2024"
+description = "An async Rust Valkyrie that speaks RESP — carrying your commands between realms of Valkey."
+license = "MIT"
+readme = "README.md"
+repository = "https://github.com/j-p-d-e-v/valkyree"
+categories = ["parsing", "network-programming", "database"]
+keywords = ["valkey", "redis", "resp", "parser", "protocol"]
 
 [dependencies]
 anyhow = "1.0.100"
