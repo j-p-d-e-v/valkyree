@@ -1,12 +1,12 @@
+use crate::types::Value;
 use anyhow::anyhow;
-use serde_json::Value;
 
 #[derive(Debug)]
 pub struct Nulls {}
 
 impl Nulls {
     pub fn build(value: &[u8]) -> anyhow::Result<Value> {
-        if value.len() > 0 {
+        if value.is_empty() {
             return Err(anyhow!("NULL_INVALID_VALUE".to_string()));
         }
         Ok(Value::Null)

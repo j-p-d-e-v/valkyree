@@ -1,5 +1,7 @@
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub enum ErrorKind {
+use serde::{Deserialize, Serialize};
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
+pub enum SimpleErrorKind {
     Err,         // Generic error
     WrongType,   // Operation against wrong data type
     NoAuth,      // Authentication required
@@ -36,7 +38,7 @@ pub enum ErrorKind {
     Unknown,     // Fallback for unrecognized prefix
 }
 
-impl ErrorKind {
+impl SimpleErrorKind {
     pub fn from(value: &str) -> Self {
         match value.to_ascii_uppercase().as_str() {
             "ERR" => Self::Err,

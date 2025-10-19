@@ -1,6 +1,5 @@
-use serde_json::Value;
-
 use crate::builder::resp_data_type::helpers::get_length;
+use crate::types::Value;
 
 #[derive(Debug)]
 pub struct BulkStrings {}
@@ -30,13 +29,13 @@ pub mod test_bulk_strings {
     fn test_string() {
         struct TestCase<'a> {
             pub input: &'a [u8],
-            pub expected: String,
+            pub expected: Value,
         }
         let test_cases = vec![
             TestCase {
                 //5\r\nhello
                 input: &[53, 13, 10, 104, 101, 108, 108, 111],
-                expected: "hello".to_string(),
+                expected: Value::String("hello".to_string()),
             },
             TestCase {
                 //17\r\nhello\r\nhi\r\nworld
@@ -44,7 +43,7 @@ pub mod test_bulk_strings {
                     49, 55, 13, 10, 104, 101, 108, 108, 111, 13, 10, 104, 105, 13, 10, 119, 111,
                     114, 108, 100,
                 ],
-                expected: "hello\r\nhi\r\nworld".to_string(),
+                expected: Value::String("hello\r\nhi\r\nworld".to_string()),
             },
             TestCase {
                 // 18\r\nhello\r\nhi\r\nworld\r\n
@@ -52,14 +51,14 @@ pub mod test_bulk_strings {
                     49, 56, 13, 10, 104, 101, 108, 108, 111, 13, 10, 104, 105, 13, 10, 119, 111,
                     114, 108, 100, 13, 10,
                 ],
-                expected: "hello\r\nhi\r\nworld\r\n".to_string(),
+                expected: Value::String("hello\r\nhi\r\nworld\r\n".to_string()),
             },
             TestCase {
                 // 12\r\nline1\nline2
                 input: &[
                     49, 50, 13, 10, 108, 105, 110, 101, 49, 10, 108, 105, 110, 101, 50,
                 ],
-                expected: "line1\nline2".to_string(),
+                expected: Value::String("line1\nline2".to_string()),
             },
         ];
         for test_case in test_cases {
@@ -73,21 +72,25 @@ pub mod test_bulk_strings {
     fn test_binary() {
         struct TestCase<'a> {
             pub input: &'a [u8],
-            pub expected: String,
+            pub expected: Value,
         }
         let test_cases = vec![
             TestCase {
                 //4\r\n\x00\xFF\xAB\xCD
                 input: &[52, 13, 10, 0, 255, 171, 205],
-                expected: String::from_utf8_lossy(&[0x00, 0xFF, 0xAB, 0xCD]).to_string(),
+                expected: Value::String(
+                    String::from_utf8_lossy(&[0x00, 0xFF, 0xAB, 0xCD]).to_string(),
+                ),
             },
             TestCase {
                 //10\r\n\x00\x01\x02\x03\x04\x05\x06\x07\x08\x09\r\n
                 input: &[49, 48, 13, 10, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9],
-                expected: String::from_utf8_lossy(&[
-                    0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09,
-                ])
-                .to_string(),
+                expected: Value::String(
+                    String::from_utf8_lossy(&[
+                        0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09,
+                    ])
+                    .to_string(),
+                ),
             },
         ];
         for test_case in test_cases {

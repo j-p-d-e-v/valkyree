@@ -1,12 +1,11 @@
-use serde_json::Value;
-
+use crate::types::Value;
 #[derive(Debug)]
 pub struct SimpleStrings {}
 
 impl SimpleStrings {
-    pub fn build(value: &[u8]) -> anyhow::Result<Value> {
+    pub fn build(value: &[u8]) -> Value {
         let value = String::from_utf8_lossy(value);
-        Ok(Value::String(value.to_string()))
+        Value::String(value.to_string())
     }
 }
 
@@ -17,14 +16,12 @@ pub mod test_simple_strings {
     #[test]
     fn test_not_empty() {
         let result = SimpleStrings::build(&vec![79, 75]);
-        assert!(result.is_ok(), "{:#?}", result.err());
-        assert_eq!("OK".to_string(), result.unwrap());
+        assert_eq!(Value::String("OK".to_string()), result);
     }
 
     #[test]
     fn test_empty() {
         let result = SimpleStrings::build(&vec![]);
-        assert!(result.is_ok(), "{:#?}", result.err());
-        assert!(result.unwrap().is_string());
+        assert!(result.is_string());
     }
 }

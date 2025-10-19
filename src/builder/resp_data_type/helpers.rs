@@ -1,9 +1,9 @@
 use anyhow::anyhow;
 
 /// Get the length on a given RESP input
-/// Parameters:
+///   Parameters:
 /// - value - The array unsigned integer representation of the input.
-/// Returns:
+///   Returns:
 /// - new_start_index - The index where the value will start after getting the length
 /// - length - The length of the value.
 pub fn get_length(value: &[u8]) -> anyhow::Result<(usize, isize)> {

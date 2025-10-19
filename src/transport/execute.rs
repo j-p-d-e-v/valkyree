@@ -1,6 +1,6 @@
-use crate::builder::result::Result;
+use crate::builder::resp_data_type::RespParser;
+use crate::types::Value;
 use anyhow::anyhow;
-use serde_json::Value;
 use std::sync::Arc;
 use tokio::io::AsyncWriteExt;
 use tokio::net::TcpStream;
@@ -41,7 +41,7 @@ impl Execute {
                 }
             }
         }
-        let result = Result::new(&data);
+        let result = RespParser::new(&data);
         result.get()
     }
 }

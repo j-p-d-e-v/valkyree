@@ -1,15 +1,17 @@
+use crate::builder::resp_data_type::arrays::Arrays;
+use crate::builder::resp_data_type::{BigNumbers, Booleans, BulkStrings, Doubles, Integers, Nulls};
+use crate::types::Value;
 use crate::{
     builder::resp_data_type::{SimpleErrors, SimpleStrings},
     types::resp_data_kind::RespDataType,
 };
 use anyhow::anyhow;
-use serde_json::Value;
 #[derive(Debug, Clone)]
-pub struct Result {
+pub struct RespParser {
     pub value: Vec<u8>,
 }
 
-impl Result {
+impl RespParser {
     pub fn new(value: &Vec<u8>) -> Self {
         Self {
             value: value.to_owned(),
@@ -34,8 +36,14 @@ impl Result {
         let data_type = self.get_data_type()?;
         let valueb = self.get_value()?;
         match data_type {
-            RespDataType::SimpleStrings => SimpleStrings::build(&valueb),
-            RespDataType::SimpleErrors => Err(anyhow!(SimpleErrors::build(&valueb))),
+            RespDataType::SimpleStrings => Ok(SimpleStrings::build(&valueb)),
+            RespDataType::SimpleErrors => Ok(SimpleErrors::build(&valueb)),
+            RespDataType::Integers => Ok(Integers::build(&valueb)?),
+            RespDataType::BulkStrings => Ok(BulkStrings::build(&valueb)?),
+            RespDataType::Nulls => Ok(Nulls::build(&valueb)?),
+            RespDataType::Booleans => Ok(Booleans::build(&valueb)?),
+            RespDataType::BigNumbers => Ok(BigNumbers::build(&valueb)?),
+            RespDataType::Doubles => Ok(Doubles::build(&valueb)?),
             _ => Ok(Value::Null),
         }
     }
@@ -48,7 +56,7 @@ pub mod test_result {
     #[test]
     fn test_data_type() {
         let input: Vec<u8> = vec![43, 79, 75, 13, 10]; //+Ok\r\n
-        let result = Result::new(&input);
+        let result = RespParser::new(&input);
         let data_type = result.get_data_type();
         assert!(data_type.is_ok(), "{:#?}", data_type.err());
         let data_type = data_type.unwrap();
@@ -59,7 +67,7 @@ pub mod test_result {
     #[test]
     fn test_value() {
         let input: Vec<u8> = vec![43, 79, 75, 13, 10]; //+Ok\r\n
-        let result = Result::new(&input);
+        let result = RespParser::new(&input);
         let value = result.get_value();
         assert!(value.is_ok(), "{:#?}", value.err());
         let value = value.unwrap();
@@ -70,7 +78,7 @@ pub mod test_result {
     #[test]
     fn test_get() {
         let input: Vec<u8> = vec![43, 79, 75, 13, 10]; //+Ok\r\n
-        let result = Result::new(&input);
+        let result = RespParser::new(&input);
         let value = result.get();
         assert!(value.is_ok(), "{:#?}", value.err());
         let value = value.unwrap();

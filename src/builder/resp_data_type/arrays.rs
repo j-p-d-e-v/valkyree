@@ -1,6 +1,6 @@
 use crate::builder::resp_data_type::helpers::get_length;
+use crate::builder::resp_data_type::parser::RespParser;
 use serde_json::Value;
-
 #[derive(Debug)]
 pub struct Arrays {}
 
