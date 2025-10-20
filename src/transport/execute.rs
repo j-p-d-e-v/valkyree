@@ -228,34 +228,36 @@ pub mod test_execute {
     async fn test_incr_decr() {
         let connection = ConnectionBuilder::new(&ConnectionConfig {
             address: "127.0.0.1:6379".to_string(),
-            username: None,
-            password: None,
+            username: Some("myapp".to_string()),
+            password: Some("password123".to_string()),
         })
         .connect()
         .await;
         assert!(connection.is_ok(), "{:#?}", connection.err());
         let stream = connection.unwrap();
         let execute = Execute::new(stream).await;
+        auth(&execute).await.unwrap();
         let command =
-            CommandKind::Increment("myvalue".to_string()).build();
+            CommandKind::Increment("incrdecr".to_string()).build();
+        assert!(command.is_ok(), "{:#?}", command.err());
+        let result = execute.send(&command.unwrap()).await;
+        assert!(result.is_ok(), "{:#?}", result.is_err());
+        println!("result:{:#?}",result);
+        assert!(result.unwrap().is_integer());
+        let command =
+            CommandKind::Decrement("incrdecr".to_string()).build();
         assert!(command.is_ok(), "{:#?}", command.err());
         let result = execute.send(&command.unwrap()).await;
         assert!(result.is_ok(), "{:#?}", result.is_err());
         assert!(result.unwrap().is_integer());
         let command =
-            CommandKind::Decrement("myvalue".to_string()).build();
+            CommandKind::IncrementBy("incrdecr".to_string(),2).build();
         assert!(command.is_ok(), "{:#?}", command.err());
         let result = execute.send(&command.unwrap()).await;
         assert!(result.is_ok(), "{:#?}", result.is_err());
         assert!(result.unwrap().is_integer());
         let command =
-            CommandKind::IncrementBy("myvalue".to_string(),2).build();
-        assert!(command.is_ok(), "{:#?}", command.err());
-        let result = execute.send(&command.unwrap()).await;
-        assert!(result.is_ok(), "{:#?}", result.is_err());
-        assert!(result.unwrap().is_integer());
-        let command =
-            CommandKind::DecrementBy("myvalue".to_string(),2).build();
+            CommandKind::DecrementBy("incrdecr".to_string(),2).build();
         assert!(command.is_ok(), "{:#?}", command.err());
         let result = execute.send(&command.unwrap()).await;
         assert!(result.is_ok(), "{:#?}", result.is_err());
@@ -265,18 +267,20 @@ pub mod test_execute {
     async fn test_keys() {
         let connection = ConnectionBuilder::new(&ConnectionConfig {
             address: "127.0.0.1:6379".to_string(),
-            username: None,
-            password: None,
+            username: Some("myapp".to_string()),
+            password: Some("password123".to_string()),
         })
         .connect()
         .await;
         assert!(connection.is_ok(), "{:#?}", connection.err());
         let stream = connection.unwrap();
         let execute = Execute::new(stream).await;
+        auth(&execute).await.unwrap();
         let command =
             CommandKind::Keys("*".to_string()).build();
         assert!(command.is_ok(), "{:#?}", command.err());
         let result = execute.send(&command.unwrap()).await;
+        println!("result: {:#?}",result);
         assert!(result.is_ok(), "{:#?}", result.is_err());
         assert!(result.unwrap().is_array());
     }
