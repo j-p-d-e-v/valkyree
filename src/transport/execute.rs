@@ -242,7 +242,6 @@ pub mod test_execute {
         assert!(command.is_ok(), "{:#?}", command.err());
         let result = execute.send(&command.unwrap()).await;
         assert!(result.is_ok(), "{:#?}", result.is_err());
-        println!("result:{:#?}",result);
         assert!(result.unwrap().is_integer());
         let command =
             CommandKind::Decrement("incrdecr".to_string()).build();
@@ -280,7 +279,6 @@ pub mod test_execute {
             CommandKind::Keys("*".to_string()).build();
         assert!(command.is_ok(), "{:#?}", command.err());
         let result = execute.send(&command.unwrap()).await;
-        println!("result: {:#?}",result);
         assert!(result.is_ok(), "{:#?}", result.is_err());
         assert!(result.unwrap().is_array());
     }

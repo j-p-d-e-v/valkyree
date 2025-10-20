@@ -10,39 +10,48 @@ pub struct Arrays {}
 
 impl RespDataTypeBase for Arrays {}
 impl Arrays {
+    fn final_push_data(tmp_data: &mut Vec<u8>, iter: &mut std::iter::Peekable<std::slice::Iter<'_, u8>>) {
+        tmp_data.push(13);
+        tmp_data.push(10);
+        iter.next();
+        iter.next();
+    }
+
+    fn is_array_identifier(id: &u8) -> bool{
+        if let Ok(array_id) = RespDataType::Arrays.to_decimal() && &array_id == id {
+            true
+        } else { 
+            false 
+        }
+    }
+
     pub fn split_resp_types(value: &[u8]) -> Vec<Vec<u8>> {
-        let mut cr_flag = false;
-        let mut lf_flag = false;
-        let mut kind_flag = false;
-        let mut saw_array: u8 = 0;
         let identifiers = RespDataType::get_identifiers_decimals();
         let mut tmp_data: Vec<u8> = Vec::new();
         let mut data: Vec<Vec<u8>> = Vec::new();
-        for v in value.iter() {
-            if v == &13 {
-                cr_flag = true;
-            }
-            if v == &10 {
-                lf_flag = true;
-            }
-            if let Ok(array) = RespDataType::Arrays.to_decimal()
-                && &array == v
-            {
-                saw_array += 1;
-            }
-            if identifiers.contains(v) && cr_flag && lf_flag {
-                kind_flag = true;
-            }
-            if cr_flag && lf_flag && kind_flag && (saw_array == 0 || saw_array == 2) {
-                data.push(tmp_data);
-                tmp_data = Vec::new();
-                cr_flag = false;
-                lf_flag = false;
-                kind_flag = false;
-                saw_array = if saw_array > 0 { 1 } else { 0 };
-            }
-
+        let mut iter = value.into_iter().peekable();
+        let mut peek_iter = value.iter();        
+        let main_id_is_array = if let Some(starting_id) = peek_iter.next() { Self::is_array_identifier(starting_id) } else { false };
+        while let Some(v) = iter.next() {
             tmp_data.push(*v);
+            let mut peek = iter.clone();
+            if let Some(cr) = peek.next() && cr == &13 &&
+                let Some(lf) = peek.next() && lf == &10 &&
+                let Some(id) = peek.next() && identifiers.contains(&id) {
+                let next_id_is_array = Self::is_array_identifier(id);
+                if main_id_is_array {
+                    if next_id_is_array {
+                        Self::final_push_data(&mut tmp_data, &mut iter);
+                        data.push(tmp_data);
+                        tmp_data = Vec::new();
+                    }
+                }
+                else {
+                    Self::final_push_data(&mut tmp_data, &mut iter);
+                    data.push(tmp_data);
+                    tmp_data = Vec::new();
+                }                
+            }
         }
         if !tmp_data.is_empty() {
             data.push(tmp_data);
