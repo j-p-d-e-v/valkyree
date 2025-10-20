@@ -2,8 +2,7 @@
 
 Valkeyree — the messenger between realms.
 
-She rides the async winds of Tokio, carrying your commands from Rust to Valkey and back in pure RESP form.
-With Serde as her charm, she translates your data effortlessly — no scrolls, no spells, just type-safe speed. ⚡
+She rides the async winds of Tokio, delivering your commands from Rust to Valkey in pure RESP form — fearless, fast, and forged in Rust. ⚡
 
 A modern Rust library for crafting, sending, and decoding Valkey commands — elegant, async, and fearless.
 
@@ -12,12 +11,13 @@ A modern Rust library for crafting, sending, and decoding Valkey commands — el
 cargo add valkeyree
 ```
 
+Crates IO: https://crates.io/crates/valkeyree
+
 ### ✨ Features
 - ⚡ Async I/O powered by **Tokio**
 - 🧱 Low-level **RESP2/RESP3(In the future)** encoder & decoder
 - 🧩 Command builders and typed result enums
 - 🔐 Authentication & ACL-ready
-- 🧠 **Serde**-friendly data serialization
 - 🚀 Built for pipelining and future Valkey releases
 
 ### Usage

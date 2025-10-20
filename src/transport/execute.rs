@@ -224,4 +224,60 @@ pub mod test_execute {
         assert!(result.is_ok(), "{:#?}", result.is_err());
         assert!(result.unwrap().is_integer());
     }
+    #[tokio::test]
+    async fn test_incr_decr() {
+        let connection = ConnectionBuilder::new(&ConnectionConfig {
+            address: "127.0.0.1:6379".to_string(),
+            username: None,
+            password: None,
+        })
+        .connect()
+        .await;
+        assert!(connection.is_ok(), "{:#?}", connection.err());
+        let stream = connection.unwrap();
+        let execute = Execute::new(stream).await;
+        let command =
+            CommandKind::Increment("myvalue".to_string()).build();
+        assert!(command.is_ok(), "{:#?}", command.err());
+        let result = execute.send(&command.unwrap()).await;
+        assert!(result.is_ok(), "{:#?}", result.is_err());
+        assert!(result.unwrap().is_integer());
+        let command =
+            CommandKind::Decrement("myvalue".to_string()).build();
+        assert!(command.is_ok(), "{:#?}", command.err());
+        let result = execute.send(&command.unwrap()).await;
+        assert!(result.is_ok(), "{:#?}", result.is_err());
+        assert!(result.unwrap().is_integer());
+        let command =
+            CommandKind::IncrementBy("myvalue".to_string(),2).build();
+        assert!(command.is_ok(), "{:#?}", command.err());
+        let result = execute.send(&command.unwrap()).await;
+        assert!(result.is_ok(), "{:#?}", result.is_err());
+        assert!(result.unwrap().is_integer());
+        let command =
+            CommandKind::DecrementBy("myvalue".to_string(),2).build();
+        assert!(command.is_ok(), "{:#?}", command.err());
+        let result = execute.send(&command.unwrap()).await;
+        assert!(result.is_ok(), "{:#?}", result.is_err());
+        assert!(result.unwrap().is_integer());
+    }
+    #[tokio::test]
+    async fn test_keys() {
+        let connection = ConnectionBuilder::new(&ConnectionConfig {
+            address: "127.0.0.1:6379".to_string(),
+            username: None,
+            password: None,
+        })
+        .connect()
+        .await;
+        assert!(connection.is_ok(), "{:#?}", connection.err());
+        let stream = connection.unwrap();
+        let execute = Execute::new(stream).await;
+        let command =
+            CommandKind::Keys("*".to_string()).build();
+        assert!(command.is_ok(), "{:#?}", command.err());
+        let result = execute.send(&command.unwrap()).await;
+        assert!(result.is_ok(), "{:#?}", result.is_err());
+        assert!(result.unwrap().is_array());
+    }
 }

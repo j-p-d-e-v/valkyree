@@ -1,5 +1,5 @@
 use crate::{
-    builder::commands::{Auth, AuthConfig, Expire, Get, Ping, Raw, Set, Ttl, delete::Delete},
+    builder::commands::{delete::Delete, Auth, AuthConfig, Decrement, DecrementBy, Expire, Get, Increment, IncrementBy, Ping, Raw, Set, Ttl, Keys},
     types::ExpiryKind,
 };
 use serde_json::Value;
@@ -10,8 +10,13 @@ pub enum CommandKind {
     Set(String, Value),
     Raw(String),
     Delete(Vec<String>),
+    Increment(String),
+    IncrementBy(String,u64),
+    Decrement(String),
+    DecrementBy(String,u64),
     Ping,
     Ttl(String),
+    Keys(String),
     Expire(String, u64, Option<ExpiryKind>),
 }
 impl CommandKind {
@@ -25,6 +30,11 @@ impl CommandKind {
             Self::Delete(values) => Delete::build(values),
             Self::Raw(message) => Raw::build(message),
             Self::Set(key, value) => Set::build(key, value),
+            Self::Increment(key) => Increment::build(key),
+            Self::Decrement(key) => Decrement::build(key),
+            Self::IncrementBy(key, value) => IncrementBy::build(key, value),
+            Self::DecrementBy(key, value) => DecrementBy::build(key, value),
+            Self::Keys(value) => Keys::build(value),
         }
     }
 }
