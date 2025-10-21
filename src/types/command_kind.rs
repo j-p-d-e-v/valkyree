@@ -1,5 +1,8 @@
 use crate::{
-    builder::commands::{delete::Delete, Auth, AuthConfig, Decrement, DecrementBy, Expire, Get, Increment, IncrementBy, Ping, Raw, Set, Ttl, Keys},
+    builder::commands::{
+        Auth, AuthConfig, Decrement, DecrementBy, Exists, Expire, ExpireAt, ExpireTime, Get, Hello,
+        Increment, IncrementBy, Keys, Ping, Raw, Set, Ttl, delete::Delete,
+    },
     types::ExpiryKind,
 };
 use serde_json::Value;
@@ -11,13 +14,17 @@ pub enum CommandKind {
     Raw(String),
     Delete(Vec<String>),
     Increment(String),
-    IncrementBy(String,u64),
+    IncrementBy(String, u64),
     Decrement(String),
-    DecrementBy(String,u64),
+    DecrementBy(String, u64),
     Ping,
     Ttl(String),
     Keys(String),
+    Hello,
     Expire(String, u64, Option<ExpiryKind>),
+    ExpireAt(String, u64, Option<ExpiryKind>),
+    ExpireTime(String),
+    Exists(Vec<String>),
 }
 impl CommandKind {
     pub fn build(&self) -> anyhow::Result<String> {
@@ -35,6 +42,10 @@ impl CommandKind {
             Self::IncrementBy(key, value) => IncrementBy::build(key, value),
             Self::DecrementBy(key, value) => DecrementBy::build(key, value),
             Self::Keys(value) => Keys::build(value),
+            Self::Hello => Hello::build(),
+            Self::ExpireAt(key, duration, kind) => ExpireAt::build(key, duration, kind),
+            Self::ExpireTime(key) => ExpireTime::build(key),
+            Self::Exists(keys) => Exists::build(keys),
         }
     }
 }

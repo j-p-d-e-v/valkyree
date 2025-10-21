@@ -109,7 +109,7 @@ pub mod test_execute {
     }
 
     #[tokio::test]
-    async fn test_set_get() {
+    async fn test_set_get_exists() {
         let connection = ConnectionBuilder::new(&ConnectionConfig {
             address: "127.0.0.1:6379".to_string(),
             username: Some("myapp".to_string()),
@@ -130,6 +130,16 @@ pub mod test_execute {
         assert!(get_command.is_ok(), "{:#?}", get_command.err());
         let result = execute.send(&get_command.unwrap()).await;
         assert!(result.is_ok(), "{:#?}", result.is_err());
+        let exists_command =
+            CommandKind::Exists(vec!["testmykey".to_string(), "hello".to_string()]).build();
+        assert!(exists_command.is_ok(), "{:#?}", exists_command.err());
+        let result = execute.send(&exists_command.unwrap()).await;
+        assert!(result.is_ok(), "{:#?}", result.is_err());
+        if let RespDataTypeValue::Integer(n) = result.unwrap() {
+            assert!(n > 0);
+        } else {
+            assert!(false);
+        }
     }
 
     #[tokio::test]
@@ -200,6 +210,26 @@ pub mod test_execute {
     }
 
     #[tokio::test]
+    async fn test_hello() {
+        let connection = ConnectionBuilder::new(&ConnectionConfig {
+            address: "127.0.0.1:6379".to_string(),
+            username: Some("myapp".to_string()),
+            password: Some("password123".to_string()),
+        })
+        .connect()
+        .await;
+        assert!(connection.is_ok(), "{:#?}", connection.err());
+        let stream = connection.unwrap();
+        let execute = Execute::new(stream).await;
+        auth(&execute).await.unwrap();
+        let hello_command = CommandKind::Hello.build();
+        assert!(hello_command.is_ok(), "{:#?}", hello_command.err());
+        let command = hello_command.unwrap();
+        let result = execute.send(&command).await;
+        assert!(result.unwrap().is_array());
+    }
+
+    #[tokio::test]
     async fn test_expire_ttl() {
         let connection = ConnectionBuilder::new(&ConnectionConfig {
             address: "127.0.0.1:6379".to_string(),
@@ -223,6 +253,28 @@ pub mod test_execute {
         let result = execute.send(&ttl_command.unwrap()).await;
         assert!(result.is_ok(), "{:#?}", result.is_err());
         assert!(result.unwrap().is_integer());
+
+        let set_command = CommandKind::Set(
+            "myexpirekey".to_string(),
+            Value::String("myvalue".to_string()),
+        )
+        .build();
+        assert!(set_command.is_ok(), "{:#?}", set_command.err());
+        let _ = execute.send(&set_command.unwrap()).await;
+        let expire_at_command = CommandKind::ExpireAt("myexpirekey".to_string(), 100, None).build();
+        assert!(expire_at_command.is_ok(), "{:#?}", expire_at_command.err());
+        let result = execute.send(&expire_at_command.unwrap()).await;
+        assert!(result.is_ok(), "{:#?}", result.is_err());
+        assert_eq!(result.unwrap(), RespDataTypeValue::Integer(1));
+        let expire_time_command = CommandKind::ExpireTime("myexpirekey".to_string()).build();
+        assert!(
+            expire_time_command.is_ok(),
+            "{:#?}",
+            expire_time_command.err()
+        );
+        let result = execute.send(&expire_time_command.unwrap()).await;
+        assert!(result.is_ok(), "{:#?}", result.is_err());
+        assert!(result.unwrap().is_integer());
     }
     #[tokio::test]
     async fn test_incr_decr() {
@@ -237,26 +289,22 @@ pub mod test_execute {
         let stream = connection.unwrap();
         let execute = Execute::new(stream).await;
         auth(&execute).await.unwrap();
-        let command =
-            CommandKind::Increment("incrdecr".to_string()).build();
+        let command = CommandKind::Increment("incrdecr".to_string()).build();
         assert!(command.is_ok(), "{:#?}", command.err());
         let result = execute.send(&command.unwrap()).await;
         assert!(result.is_ok(), "{:#?}", result.is_err());
         assert!(result.unwrap().is_integer());
-        let command =
-            CommandKind::Decrement("incrdecr".to_string()).build();
+        let command = CommandKind::Decrement("incrdecr".to_string()).build();
         assert!(command.is_ok(), "{:#?}", command.err());
         let result = execute.send(&command.unwrap()).await;
         assert!(result.is_ok(), "{:#?}", result.is_err());
         assert!(result.unwrap().is_integer());
-        let command =
-            CommandKind::IncrementBy("incrdecr".to_string(),2).build();
+        let command = CommandKind::IncrementBy("incrdecr".to_string(), 2).build();
         assert!(command.is_ok(), "{:#?}", command.err());
         let result = execute.send(&command.unwrap()).await;
         assert!(result.is_ok(), "{:#?}", result.is_err());
         assert!(result.unwrap().is_integer());
-        let command =
-            CommandKind::DecrementBy("incrdecr".to_string(),2).build();
+        let command = CommandKind::DecrementBy("incrdecr".to_string(), 2).build();
         assert!(command.is_ok(), "{:#?}", command.err());
         let result = execute.send(&command.unwrap()).await;
         assert!(result.is_ok(), "{:#?}", result.is_err());
@@ -275,8 +323,7 @@ pub mod test_execute {
         let stream = connection.unwrap();
         let execute = Execute::new(stream).await;
         auth(&execute).await.unwrap();
-        let command =
-            CommandKind::Keys("*".to_string()).build();
+        let command = CommandKind::Keys("*".to_string()).build();
         assert!(command.is_ok(), "{:#?}", command.err());
         let result = execute.send(&command.unwrap()).await;
         assert!(result.is_ok(), "{:#?}", result.is_err());

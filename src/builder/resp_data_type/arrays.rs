@@ -10,18 +10,23 @@ pub struct Arrays {}
 
 impl RespDataTypeBase for Arrays {}
 impl Arrays {
-    fn final_push_data(tmp_data: &mut Vec<u8>, iter: &mut std::iter::Peekable<std::slice::Iter<'_, u8>>) {
+    fn final_push_data(
+        tmp_data: &mut Vec<u8>,
+        iter: &mut std::iter::Peekable<std::slice::Iter<'_, u8>>,
+    ) {
         tmp_data.push(13);
         tmp_data.push(10);
         iter.next();
         iter.next();
     }
 
-    fn is_array_identifier(id: &u8) -> bool{
-        if let Ok(array_id) = RespDataType::Arrays.to_decimal() && &array_id == id {
+    fn is_array_identifier(id: &u8) -> bool {
+        if let Ok(array_id) = RespDataType::Arrays.to_decimal()
+            && &array_id == id
+        {
             true
-        } else { 
-            false 
+        } else {
+            false
         }
     }
 
@@ -29,15 +34,23 @@ impl Arrays {
         let identifiers = RespDataType::get_identifiers_decimals();
         let mut tmp_data: Vec<u8> = Vec::new();
         let mut data: Vec<Vec<u8>> = Vec::new();
-        let mut iter = value.into_iter().peekable();
-        let mut peek_iter = value.iter();        
-        let main_id_is_array = if let Some(starting_id) = peek_iter.next() { Self::is_array_identifier(starting_id) } else { false };
+        let mut iter = value.iter().peekable();
+        let mut peek_iter = value.iter();
+        let main_id_is_array = if let Some(starting_id) = peek_iter.next() {
+            Self::is_array_identifier(starting_id)
+        } else {
+            false
+        };
         while let Some(v) = iter.next() {
             tmp_data.push(*v);
             let mut peek = iter.clone();
-            if let Some(cr) = peek.next() && cr == &13 &&
-                let Some(lf) = peek.next() && lf == &10 &&
-                let Some(id) = peek.next() && identifiers.contains(&id) {
+            if let Some(cr) = peek.next()
+                && cr == &13
+                && let Some(lf) = peek.next()
+                && lf == &10
+                && let Some(id) = peek.next()
+                && identifiers.contains(id)
+            {
                 let next_id_is_array = Self::is_array_identifier(id);
                 if main_id_is_array {
                     if next_id_is_array {
@@ -45,12 +58,11 @@ impl Arrays {
                         data.push(tmp_data);
                         tmp_data = Vec::new();
                     }
-                }
-                else {
+                } else {
                     Self::final_push_data(&mut tmp_data, &mut iter);
                     data.push(tmp_data);
                     tmp_data = Vec::new();
-                }                
+                }
             }
         }
         if !tmp_data.is_empty() {

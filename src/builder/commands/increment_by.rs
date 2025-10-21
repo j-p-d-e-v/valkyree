@@ -18,7 +18,7 @@ pub mod test_increment_by {
 
     #[test]
     fn test() {
-        let result = IncrementBy::build("mykey",&1);
+        let result = IncrementBy::build("mykey", &1);
         assert!(result.is_ok(), "{:#?}", result.err());
         assert_eq!("INCRBY mykey 1\r\n".to_string(), result.unwrap());
     }
