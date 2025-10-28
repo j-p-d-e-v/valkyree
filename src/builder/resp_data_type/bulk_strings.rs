@@ -1,28 +1,35 @@
-use crate::builder::resp_data_type::RespDataTypeBase;
-use crate::builder::resp_data_type::helpers::get_length;
+use crate::builder::resp_data_type::RespDataTypeTrait;
+use crate::builder::resp_data_type::helpers::get_resp_multi_values;
 use crate::types::RespDataTypeValue;
-use crate::types::resp_data_kind::RespDataType;
+use anyhow::anyhow;
 
 #[derive(Debug)]
-pub struct BulkStrings {}
+pub struct BulkStrings<'a> {
+    value: &'a [u8],
+    length: usize,
+}
 
-impl RespDataTypeBase for BulkStrings {}
-impl BulkStrings {
-    pub fn build(value: &[u8]) -> anyhow::Result<RespDataTypeValue> {
-        Self::is_data_type(value, RespDataType::BulkStrings)?;
-        let value = Self::get_value(value, true)?;
-        let l = get_length(&value)?;
-        let start = l.0;
-        let length = l.1;
-
+impl<'a> RespDataTypeTrait<'a> for BulkStrings<'a> {
+    fn new(value: &'a [u8]) -> Self {
+        Self { value, length: 0 }
+    }
+    fn len(&self) -> usize {
+        self.length
+    }
+    fn build(&mut self) -> anyhow::Result<RespDataTypeValue> {
+        let (start, length, id) = get_resp_multi_values(self.value)?;
+        if !id.is_bulk_strings() {
+            return Err(anyhow!("NOT_BULK_STRINGS_TYPE"));
+        }
         if length == 0 {
             return Ok(RespDataTypeValue::String("".to_string()));
-        } else if length == -1 {
+        } else if length <= -1 {
             return Ok(RespDataTypeValue::Null);
         }
-        let value = value.get(start..).unwrap_or(&[]);
-        let result = String::from_utf8_lossy(value);
-        Ok(RespDataTypeValue::String(result.to_string()))
+        let end = start + length as usize;
+        let data = String::from_utf8_lossy(&self.value[start..end]).to_string();
+        self.length = end + 2;
+        Ok(RespDataTypeValue::String(data))
     }
 }
 #[cfg(test)]
@@ -47,9 +54,9 @@ pub mod test_bulk_strings {
                 expected: RespDataTypeValue::String("hello".to_string()),
             },
             TestCase {
-                // $17\r\nhello\r\nhi\r\nworld\r\n
+                // $16\r\nhello\r\nhi\r\nworld\r\n
                 input: vec![
-                    identifier, 49, 55, 13, 10, 104, 101, 108, 108, 111, 13, 10, 104, 105, 13, 10,
+                    identifier, 49, 54, 13, 10, 104, 101, 108, 108, 111, 13, 10, 104, 105, 13, 10,
                     119, 111, 114, 108, 100, 13, 10,
                 ],
                 expected: RespDataTypeValue::String("hello\r\nhi\r\nworld".to_string()),
@@ -63,17 +70,17 @@ pub mod test_bulk_strings {
                 expected: RespDataTypeValue::String("hello\r\nhi\r\nworld\r\n".to_string()),
             },
             TestCase {
-                // $12\r\nline1\nline2\r\n
+                // $11\r\nline1\nline2\r\n
                 input: vec![
-                    identifier, 49, 50, 13, 10, 108, 105, 110, 101, 49, 10, 108, 105, 110, 101, 50,
+                    identifier, 49, 49, 13, 10, 108, 105, 110, 101, 49, 10, 108, 105, 110, 101, 50,
                     13, 10,
                 ],
                 expected: RespDataTypeValue::String("line1\nline2".to_string()),
             },
         ];
-
         for test_case in test_cases {
-            let result = BulkStrings::build(&test_case.input);
+            let mut bulk_strings = BulkStrings::new(&test_case.input);
+            let result = bulk_strings.build();
             assert!(result.is_ok(), "{:#?}", result.err());
             assert_eq!(test_case.expected, result.unwrap());
         }
@@ -111,7 +118,8 @@ pub mod test_bulk_strings {
         ];
 
         for test_case in test_cases {
-            let result = BulkStrings::build(&test_case.input);
+            let mut bulk_strings = BulkStrings::new(&test_case.input);
+            let result = bulk_strings.build();
             assert!(result.is_ok(), "{:#?}", result.err());
             assert_eq!(test_case.expected, result.unwrap());
         }
@@ -131,7 +139,8 @@ pub mod test_bulk_strings {
         }];
 
         for test_case in test_cases {
-            let result = BulkStrings::build(&test_case.input);
+            let mut bulk_strings = BulkStrings::new(&test_case.input);
+            let result = bulk_strings.build();
             assert!(result.is_ok(), "{:#?}", result.err());
             assert_eq!(RespDataTypeValue::Null, result.unwrap());
         }
@@ -151,7 +160,8 @@ pub mod test_bulk_strings {
         }];
 
         for test_case in test_cases {
-            let result = BulkStrings::build(&test_case.input);
+            let mut bulk_strings = BulkStrings::new(&test_case.input);
+            let result = bulk_strings.build();
             assert!(result.is_ok(), "{:#?}", result.err());
             assert_eq!(RespDataTypeValue::String("".to_string()), result.unwrap());
         }

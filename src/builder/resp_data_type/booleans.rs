@@ -1,18 +1,28 @@
 use crate::{
-    builder::resp_data_type::RespDataTypeBase,
-    types::{RespDataTypeValue, resp_data_kind::RespDataType},
+    builder::resp_data_type::{RespDataTypeTrait, helpers::get_resp_value},
+    types::RespDataTypeValue,
 };
 use anyhow::anyhow;
 
 #[derive(Debug)]
-pub struct Booleans {}
-
-impl RespDataTypeBase for Booleans {}
-impl Booleans {
-    pub fn build(value: &[u8]) -> anyhow::Result<RespDataTypeValue> {
-        Self::is_data_type(value, RespDataType::Booleans)?;
-        let value = Self::get_value(value, true)?;
-        let value = match String::from_utf8_lossy(&value).to_string().as_str() {
+pub struct Booleans<'a> {
+    pub length: usize,
+    pub value: &'a [u8],
+}
+impl<'a> RespDataTypeTrait<'a> for Booleans<'a> {
+    fn new(value: &'a [u8]) -> Self {
+        Self { value, length: 0 }
+    }
+    fn len(&self) -> usize {
+        self.length
+    }
+    fn build(&mut self) -> anyhow::Result<RespDataTypeValue> {
+        let (new_value, id) = get_resp_value(self.value, true)?;
+        if !id.is_booleans() {
+            return Err(anyhow!("NOT_BOOLEANS_TYPE"));
+        }
+        self.length = new_value.len() + 3;
+        let value = match String::from_utf8_lossy(new_value).to_string().as_str() {
             "t" => RespDataTypeValue::Boolean(true),
             "f" => RespDataTypeValue::Boolean(false),
             _ => {
@@ -51,7 +61,8 @@ pub mod test_booleans {
         ];
 
         for test_case in test_cases {
-            let result = Booleans::build(&test_case.input);
+            let mut booleans = Booleans::new(&test_case.input);
+            let result = booleans.build();
             assert!(result.is_ok(), "{:#?}", result.err());
             assert_eq!(test_case.expected, result.unwrap());
         }

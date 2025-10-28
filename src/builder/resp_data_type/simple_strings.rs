@@ -1,34 +1,52 @@
-use crate::builder::resp_data_type::RespDataTypeBase;
+use crate::builder::resp_data_type::RespDataTypeTrait;
+use crate::builder::resp_data_type::helpers::get_resp_value;
 use crate::types::RespDataTypeValue;
-use crate::types::resp_data_kind::RespDataType;
+use anyhow::anyhow;
 #[derive(Debug)]
-pub struct SimpleStrings {}
+pub struct SimpleStrings<'a> {
+    pub length: usize,
+    pub value: &'a [u8],
+}
 
-impl SimpleStrings {
-    pub fn build(value: &[u8]) -> anyhow::Result<RespDataTypeValue> {
-        Self::is_data_type(value, RespDataType::SimpleStrings)?;
-        let value = Self::get_value(value, true)?;
-        let value = String::from_utf8_lossy(&value);
-        Ok(RespDataTypeValue::String(value.to_string()))
+impl<'a> RespDataTypeTrait<'a> for SimpleStrings<'a> {
+    fn new(value: &'a [u8]) -> Self {
+        Self { value, length: 0 }
+    }
+    fn len(&self) -> usize {
+        self.length
+    }
+    fn build(&mut self) -> anyhow::Result<RespDataTypeValue> {
+        let (new_value, id) = get_resp_value(self.value, true)?;
+        if !id.is_simple_strings() {
+            return Err(anyhow!("NOT_SIMPLE_STRINGS_TYPE"));
+        }
+        self.length = new_value.len() + 3;
+        let data = String::from_utf8_lossy(new_value).to_string();
+        Ok(RespDataTypeValue::String(data))
     }
 }
-impl RespDataTypeBase for SimpleStrings {}
 
 #[cfg(test)]
 pub mod test_simple_strings {
+    use crate::types::resp_data_kind::RespDataType;
+
     use super::*;
 
     #[test]
     fn test_not_empty() {
         let identifier = RespDataType::SimpleStrings.to_decimal().unwrap();
-        let result = SimpleStrings::build(&vec![identifier, 79, 75, 13, 10]);
+        let input = vec![identifier, 79, 75, 13, 10];
+        let mut sstrings = SimpleStrings::new(&input);
+        let result = sstrings.build();
         assert_eq!(RespDataTypeValue::String("OK".to_string()), result.unwrap());
     }
 
     #[test]
     fn test_empty() {
         let identifier = RespDataType::SimpleStrings.to_decimal().unwrap();
-        let result = SimpleStrings::build(&vec![identifier, 13, 10]);
+        let input = vec![identifier, 13, 10];
+        let mut sstrings = SimpleStrings::new(&input);
+        let result = sstrings.build();
         assert!(result.unwrap().is_string());
     }
 }

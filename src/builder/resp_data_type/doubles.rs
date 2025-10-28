@@ -1,17 +1,28 @@
 use crate::{
-    builder::resp_data_type::RespDataTypeBase,
-    types::{RespDataTypeValue, resp_data_kind::RespDataType},
+    builder::resp_data_type::{RespDataTypeTrait, helpers::get_resp_value},
+    types::RespDataTypeValue,
 };
+use anyhow::anyhow;
 
 #[derive(Debug)]
-pub struct Doubles {}
-
-impl RespDataTypeBase for Doubles {}
-impl Doubles {
-    pub fn build(value: &[u8]) -> anyhow::Result<RespDataTypeValue> {
-        Self::is_data_type(value, RespDataType::Doubles)?;
-        let value = Self::get_value(value, true)?;
-        let value = String::from_utf8_lossy(&value).to_string();
+pub struct Doubles<'a> {
+    pub length: usize,
+    pub value: &'a [u8],
+}
+impl<'a> RespDataTypeTrait<'a> for Doubles<'a> {
+    fn new(value: &'a [u8]) -> Self {
+        Self { value, length: 0 }
+    }
+    fn len(&self) -> usize {
+        self.length
+    }
+    fn build(&mut self) -> anyhow::Result<RespDataTypeValue> {
+        let (new_value, id) = get_resp_value(self.value, true)?;
+        if !id.is_doubles() {
+            return Err(anyhow!("NOT_DOUBLES_TYPE"));
+        }
+        self.length = new_value.len() + 3;
+        let value = String::from_utf8_lossy(new_value).to_string();
         let parsed = value.parse::<f64>()?;
         let result = if parsed.is_nan() {
             RespDataTypeValue::Nan
@@ -58,7 +69,8 @@ pub mod test_doubles {
             },
         ];
         for test_case in test_cases {
-            let result = Doubles::build(&test_case.input);
+            let mut doubles = Doubles::new(&test_case.input);
+            let result = doubles.build();
             assert!(result.is_ok(), "{:#?}", result.err());
             assert_eq!(test_case.expected, result.unwrap());
         }
@@ -145,7 +157,8 @@ pub mod test_doubles {
         ];
 
         for test_case in test_cases {
-            let result = Doubles::build(&test_case.input);
+            let mut doubles = Doubles::new(&test_case.input);
+            let result = doubles.build();
             assert!(
                 result.is_ok(),
                 "failed to parse {:?}: {:#?}",

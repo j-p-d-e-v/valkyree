@@ -41,7 +41,8 @@ impl Execute {
                 }
             }
         }
-        let result = RespParser::parse(&data)?;
+        let mut parser = RespParser::new(&data);
+        let result = parser.parse()?;
         Ok(result)
     }
 }

@@ -15,6 +15,41 @@ pub enum RespDataType {
 }
 
 impl RespDataType {
+    pub fn is_simple_strings(&self) -> bool {
+        matches!(self, Self::SimpleStrings)
+    }
+
+    pub fn is_simple_errors(&self) -> bool {
+        matches!(self, Self::SimpleErrors)
+    }
+
+    pub fn is_integers(&self) -> bool {
+        matches!(self, Self::Integers)
+    }
+
+    pub fn is_bulk_strings(&self) -> bool {
+        matches!(self, Self::BulkStrings)
+    }
+
+    pub fn is_arrays(&self) -> bool {
+        matches!(self, Self::Arrays)
+    }
+
+    pub fn is_nulls(&self) -> bool {
+        matches!(self, Self::Nulls)
+    }
+
+    pub fn is_booleans(&self) -> bool {
+        matches!(self, Self::Booleans)
+    }
+
+    pub fn is_doubles(&self) -> bool {
+        matches!(self, Self::Doubles)
+    }
+
+    pub fn is_big_numbers(&self) -> bool {
+        matches!(self, Self::BigNumbers)
+    }
     // Returns the decimal equivalent of all resp types.
     pub fn get_identifiers_decimals() -> Vec<u8> {
         let mut data: Vec<u8> = Vec::new();

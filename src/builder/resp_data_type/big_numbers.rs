@@ -1,25 +1,36 @@
 use crate::{
-    builder::resp_data_type::RespDataTypeBase,
-    types::{RespDataTypeValue, resp_data_kind::RespDataType},
+    builder::resp_data_type::{RespDataTypeTrait, helpers::get_resp_value},
+    types::RespDataTypeValue,
 };
 use anyhow::anyhow;
 use num_bigint::BigInt;
 use regex::Regex;
 
 #[derive(Debug)]
-pub struct BigNumbers {}
+pub struct BigNumbers<'a> {
+    pub length: usize,
+    pub value: &'a [u8],
+}
 
-impl RespDataTypeBase for BigNumbers {}
-impl BigNumbers {
-    pub fn build(value: &[u8]) -> anyhow::Result<RespDataTypeValue> {
-        Self::is_data_type(value, RespDataType::BigNumbers)?;
-        let value = Self::get_value(value, true)?;
+impl<'a> RespDataTypeTrait<'a> for BigNumbers<'a> {
+    fn new(value: &'a [u8]) -> Self {
+        Self { length: 0, value }
+    }
+    fn len(&self) -> usize {
+        self.length
+    }
+    fn build(&mut self) -> anyhow::Result<RespDataTypeValue> {
+        let (new_value, id) = get_resp_value(self.value, true)?;
+        if !id.is_big_numbers() {
+            return Err(anyhow!("NOT_BIG_NUMBERS_TYPE"));
+        }
+        self.length = new_value.len() + 3;
         let pattern = Regex::new(r"^-?[0-9]+$")?;
-        if !pattern.is_match(String::from_utf8_lossy(&value).as_ref()) {
+        if !pattern.is_match(String::from_utf8_lossy(new_value).as_ref()) {
             return Err(anyhow!("BIG_NUMBERS_INVALID_VALUE".to_string()));
         }
-        let parsed = if let Some(value) = BigInt::parse_bytes(&value, 10) {
-            value
+        let parsed = if let Some(i) = BigInt::parse_bytes(new_value, 10) {
+            i
         } else {
             return Err(anyhow!("BIG_NUMBERS_PARSING_ERROR".to_string()));
         };
@@ -126,7 +137,8 @@ pub mod test_big_numbers {
         });
 
         for tc in test_cases {
-            let got = BigNumbers::build(&tc.input); // your parser for '(' payload
+            let mut big_numbers = BigNumbers::new(&tc.input);
+            let got = big_numbers.build(); // your parser for '(' payload
             assert!(
                 got.is_ok(),
                 "parse error for {:?}: {:#?}",
@@ -172,7 +184,8 @@ pub mod test_big_numbers {
                 v.extend_from_slice(&[13, 10]);
                 v
             };
-            let got = BigNumbers::build(&input);
+            let mut big_numbers = BigNumbers::new(&input);
+            let got = big_numbers.build();
             assert!(
                 got.is_err(),
                 "should fail for invalid payload {:?} (framed {:?})",
