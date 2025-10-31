@@ -1,4 +1,4 @@
-use crate::types::SimpleErrorKind;
+use crate::types::{RespErrorKind, VerbatimEncoding};
 use num_bigint::BigInt;
 use serde::{Deserialize, Serialize};
 
@@ -6,7 +6,8 @@ use serde::{Deserialize, Serialize};
 pub enum RespDataTypeValue {
     Array(Vec<RespDataTypeValue>),
     String(String),
-    SimpleError(SimpleErrorKind, String),
+    VerbatimString(String, VerbatimEncoding),
+    Error(RespErrorKind, String),
     Boolean(bool),
     Double(f64),
     Integer(i64),
@@ -16,6 +17,7 @@ pub enum RespDataTypeValue {
     NegativeInfinity,
     Nan,
 }
+
 impl RespDataTypeValue {
     pub fn is_array(&self) -> bool {
         matches!(self, Self::Array(_))
@@ -23,8 +25,11 @@ impl RespDataTypeValue {
     pub fn is_string(&self) -> bool {
         matches!(self, Self::String(_))
     }
-    pub fn is_simple_error(&self) -> bool {
-        matches!(self, Self::SimpleError(_, _))
+    pub fn is_error(&self) -> bool {
+        matches!(self, Self::Error(_, _))
+    }
+    pub fn is_verbatim_string(&self) -> bool {
+        matches!(self, Self::VerbatimString(_, _))
     }
     pub fn is_boolean(&self) -> bool {
         matches!(self, Self::Boolean(_))

@@ -90,6 +90,25 @@ pub mod test_execute {
     }
 
     #[tokio::test]
+    async fn test_auth_error() {
+        let connection = ConnectionBuilder::new(&ConnectionConfig {
+            address: "127.0.0.1:6379".to_string(),
+            username: Some("myapp".to_string()),
+            password: Some("zxczxc123".to_string()),
+        })
+        .connect()
+        .await;
+        assert!(connection.is_ok(), "{:#?}", connection.err());
+        let stream = connection.unwrap();
+        let get_command = CommandKind::Get("mykeydoesnotexists".to_string()).build();
+        assert!(get_command.is_ok(), "{:#?}", get_command.err());
+        let command = get_command.unwrap();
+        let execute = Execute::new(stream).await;
+        let result = execute.send(&command).await;
+        println!("{:#?}", result);
+        assert!(result.is_ok(), "{:#?}", result.is_err());
+    }
+    #[tokio::test]
     async fn test_get_not_exists_key() {
         let connection = ConnectionBuilder::new(&ConnectionConfig {
             address: "127.0.0.1:6379".to_string(),
@@ -184,7 +203,7 @@ pub mod test_execute {
         let command = raw_command.unwrap();
         let execute = Execute::new(stream).await;
         let result = execute.send(&command).await;
-        assert!(result.unwrap().is_simple_error());
+        assert!(result.unwrap().is_error());
     }
 
     #[tokio::test]

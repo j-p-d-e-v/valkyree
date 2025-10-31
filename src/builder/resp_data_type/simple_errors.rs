@@ -1,7 +1,7 @@
 use crate::builder::resp_data_type::RespDataTypeTrait;
 use crate::builder::resp_data_type::helpers::get_resp_value;
 use crate::types::RespDataTypeValue;
-use crate::types::SimpleErrorKind;
+use crate::types::RespErrorKind;
 use anyhow::anyhow;
 
 #[derive(Debug)]
@@ -24,23 +24,8 @@ impl<'a> RespDataTypeTrait<'a> for SimpleErrors<'a> {
         }
         self.length = new_value.len() + 3;
         let data = String::from_utf8_lossy(new_value).to_string();
-        let split_data = data
-            .split(" ")
-            .map(|v| v.to_string())
-            .collect::<Vec<String>>();
-        let kind = if let Some(fvalue) = split_data.first() {
-            SimpleErrorKind::from(fvalue)
-        } else {
-            SimpleErrorKind::Unknown
-        };
-        let message = if kind != SimpleErrorKind::Unknown
-            && let Some(values) = split_data.get(1..)
-        {
-            values.join(" ")
-        } else {
-            data
-        };
-        Ok(RespDataTypeValue::SimpleError(kind, message))
+        let result = RespErrorKind::parse(data);
+        Ok(result)
     }
 }
 
@@ -60,8 +45,8 @@ pub mod test_simple_errors {
         let mut serrors = SimpleErrors::new(&input);
         let result = serrors.build();
         assert_eq!(
-            RespDataTypeValue::SimpleError(
-                SimpleErrorKind::NoAuth,
+            RespDataTypeValue::Error(
+                RespErrorKind::NoAuth,
                 "Authentication required.".to_string()
             ),
             result.unwrap()

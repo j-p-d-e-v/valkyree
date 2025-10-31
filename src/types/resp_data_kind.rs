@@ -12,11 +12,21 @@ pub enum RespDataType {
     Booleans,
     Doubles,
     BigNumbers,
+    BulkErrors,
+    VerbatimStrings,
 }
 
 impl RespDataType {
     pub fn is_simple_strings(&self) -> bool {
         matches!(self, Self::SimpleStrings)
+    }
+
+    pub fn is_verbatim_strings(&self) -> bool {
+        matches!(self, Self::VerbatimStrings)
+    }
+
+    pub fn is_bulk_errors(&self) -> bool {
+        matches!(self, Self::BulkErrors)
     }
 
     pub fn is_simple_errors(&self) -> bool {
@@ -75,6 +85,8 @@ impl RespDataType {
             35 => Self::Booleans,
             44 => Self::Doubles,
             40 => Self::BigNumbers,
+            33 => Self::BulkErrors,
+            61 => Self::VerbatimStrings,
             _ => {
                 return Err(anyhow!("NOT_SUPPORTED"));
             }
@@ -94,6 +106,8 @@ impl RespDataType {
             Self::Booleans => 35,
             Self::Doubles => 44,
             Self::BigNumbers => 40,
+            Self::BulkErrors => 33,
+            Self::VerbatimStrings => 61,
         };
         Ok(value)
     }

@@ -36,7 +36,7 @@ impl Client {
             .build()?;
             let execute = Execute::new(stream).await;
             let result = execute.send(&command).await?;
-            if let RespDataTypeValue::SimpleError(kind, message) = result {
+            if let RespDataTypeValue::Error(kind, message) = result {
                 return Err(anyhow!(format!(
                     "CLIENT_AUTH_ERROR: {:?}, {}",
                     kind, message

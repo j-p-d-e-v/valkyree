@@ -1,7 +1,9 @@
 use serde::{Deserialize, Serialize};
 
+use crate::types::RespDataTypeValue;
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
-pub enum SimpleErrorKind {
+pub enum RespErrorKind {
     Err,         // Generic error
     WrongType,   // Operation against wrong data type
     NoAuth,      // Authentication required
@@ -38,7 +40,22 @@ pub enum SimpleErrorKind {
     Unknown,     // Fallback for unrecognized prefix
 }
 
-impl SimpleErrorKind {
+impl RespErrorKind {
+    pub fn parse(data: String) -> RespDataTypeValue {
+        let mut error: Vec<String> = Vec::new();
+        for c in data.chars() {
+            if c.is_uppercase() && !c.is_whitespace() {
+                error.push(c.to_string());
+            } else {
+                break;
+            }
+        }
+        let error: String = error.join("");
+        let kind = Self::from(&error);
+        let message = data.replace(&error, "").trim().to_owned();
+        RespDataTypeValue::Error(kind, message)
+    }
+
     pub fn from(value: &str) -> Self {
         match value.to_ascii_uppercase().as_str() {
             "ERR" => Self::Err,
