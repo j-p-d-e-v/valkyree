@@ -1,11 +1,11 @@
-use crate::builder::resp_data_type::RespDataTypeTrait;
-use crate::builder::resp_data_type::RespParser;
 use crate::builder::resp_data_type::helpers::get_resp_multi_values;
 use crate::builder::resp_data_type::helpers::is_cr;
 use crate::builder::resp_data_type::helpers::is_lf;
-use crate::types::RespDataTypeValue;
+use crate::builder::resp_data_type::RespDataTypeTrait;
+use crate::builder::resp_data_type::RespParser;
 use crate::types::resp_data_kind::RespDataType;
 use crate::types::resp_data_type_iter::RespDataTypeIterator;
+use crate::types::RespDataTypeValue;
 use anyhow::anyhow;
 
 #[derive(Debug)]
@@ -57,7 +57,7 @@ impl<'a> RespDataTypeTrait<'a> for Arrays<'a> {
                 if id.is_arrays() {
                     let result = self.build()?;
                     data.push(result);
-                } else if id.is_bulk_strings() {
+                } else if id.is_bulk_strings() || id.is_verbatim_strings() || id.is_bulk_errors() {
                     let _ = self.set_data(&mut RespParser::new(self.value), &mut data, length)?;
                 } else {
                     let mut tmp_holder: Vec<u8> = Vec::new();
