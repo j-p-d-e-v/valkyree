@@ -1,7 +1,7 @@
 use anyhow::anyhow;
 use strum::IntoEnumIterator;
 use strum_macros::EnumIter;
-#[derive(Debug, Clone, PartialEq, Eq, EnumIter)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash, EnumIter)]
 pub enum RespDataType {
     SimpleStrings,
     SimpleErrors,
@@ -14,9 +14,14 @@ pub enum RespDataType {
     BigNumbers,
     BulkErrors,
     VerbatimStrings,
+    Maps,
 }
 
 impl RespDataType {
+    pub fn is_maps(&self) -> bool {
+        matches!(self, Self::Maps)
+    }
+
     pub fn is_simple_strings(&self) -> bool {
         matches!(self, Self::SimpleStrings)
     }
@@ -87,6 +92,7 @@ impl RespDataType {
             40 => Self::BigNumbers,
             33 => Self::BulkErrors,
             61 => Self::VerbatimStrings,
+            37 => Self::Maps,
             _ => {
                 return Err(anyhow!("NOT_SUPPORTED"));
             }
@@ -107,6 +113,7 @@ impl RespDataType {
             Self::Doubles => 44,
             Self::BigNumbers => 40,
             Self::BulkErrors => 33,
+            Self::Maps => 37,
             Self::VerbatimStrings => 61,
         };
         Ok(value)

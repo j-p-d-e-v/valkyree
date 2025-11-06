@@ -1,17 +1,19 @@
 use crate::types::{RespErrorKind, VerbatimEncoding};
 use num_bigint::BigInt;
+use ordered_float::OrderedFloat;
 use serde::{Deserialize, Serialize};
-
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+use std::collections::BTreeMap;
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
 pub enum RespDataTypeValue {
     Array(Vec<RespDataTypeValue>),
     String(String),
     VerbatimString(String, VerbatimEncoding),
     Error(RespErrorKind, String),
     Boolean(bool),
-    Double(f64),
     Integer(i64),
+    Double(OrderedFloat<f64>),
     BigNumber(BigInt),
+    Object(BTreeMap<RespDataTypeValue, RespDataTypeValue>),
     Null,
     Infinity,
     NegativeInfinity,
@@ -33,9 +35,6 @@ impl RespDataTypeValue {
     }
     pub fn is_boolean(&self) -> bool {
         matches!(self, Self::Boolean(_))
-    }
-    pub fn is_double(&self) -> bool {
-        matches!(self, Self::Double(_))
     }
     pub fn is_integer(&self) -> bool {
         matches!(self, Self::Integer(_))

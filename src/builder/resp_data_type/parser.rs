@@ -52,6 +52,7 @@ impl<'a> RespParser<'a> {
             RespDataType::Arrays => self.builder(Arrays::new(value))?,
             RespDataType::BulkErrors => self.builder(BulkErrors::new(value))?,
             RespDataType::VerbatimStrings => self.builder(VerbatimStrings::new(value))?,
+            _ => return Err(anyhow!("not supported")),
         };
         Ok(value)
     }

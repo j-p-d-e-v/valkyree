@@ -54,8 +54,8 @@ pub mod test_execute {
     use super::*;
     use crate::builder::commands::AuthConfig;
     use crate::transport::connection::{ConnectionBuilder, ConnectionConfig};
-    use crate::types::ExpiryKind;
     use crate::types::command_kind::CommandKind;
+    use crate::types::ExpiryKind;
 
     async fn auth(execute: &Execute) -> anyhow::Result<RespDataTypeValue> {
         let auth_command = CommandKind::Auth(AuthConfig {

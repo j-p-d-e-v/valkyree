@@ -1,8 +1,9 @@
 use crate::{
-    builder::resp_data_type::{RespDataTypeTrait, helpers::get_resp_value},
+    builder::resp_data_type::{helpers::get_resp_value, RespDataTypeTrait},
     types::RespDataTypeValue,
 };
 use anyhow::anyhow;
+use ordered_float::OrderedFloat;
 
 #[derive(Debug)]
 pub struct Doubles<'a> {
@@ -31,7 +32,7 @@ impl<'a> RespDataTypeTrait<'a> for Doubles<'a> {
         } else if parsed.is_infinite() && parsed.is_sign_negative() {
             RespDataTypeValue::NegativeInfinity
         } else {
-            RespDataTypeValue::Double(parsed)
+            RespDataTypeValue::Double(OrderedFloat(parsed))
         };
 
         Ok(result)
@@ -87,75 +88,74 @@ pub mod test_doubles {
             TestCase {
                 // ,0\r\n
                 input: vec![identifier, 48, 13, 10],
-                expected: RespDataTypeValue::Double(0.0),
+                expected: RespDataTypeValue::Double(OrderedFloat(0.0)),
             },
             TestCase {
                 // ,1\r\n
                 input: vec![identifier, 49, 13, 10],
-                expected: RespDataTypeValue::Double(1.0),
+                expected: RespDataTypeValue::Double(OrderedFloat(1.0)),
             },
             TestCase {
                 // ,-1\r\n
                 input: vec![identifier, 45, 49, 13, 10],
-                expected: RespDataTypeValue::Double(-1.0),
+                expected: RespDataTypeValue::Double(OrderedFloat(-1.0)),
             },
             TestCase {
                 // ,3.14159\r\n
                 input: vec![identifier, 51, 46, 49, 52, 49, 53, 57, 13, 10],
-                expected: RespDataTypeValue::Double(3.14159),
+                expected: RespDataTypeValue::Double(OrderedFloat(3.14159)),
             },
             TestCase {
                 // ,-0.001\r\n
                 input: vec![identifier, 45, 48, 46, 48, 48, 49, 13, 10],
-                expected: RespDataTypeValue::Double(-0.001),
+                expected: RespDataTypeValue::Double(OrderedFloat(-0.001)),
             },
             TestCase {
                 // ,123456.789\r\n
                 input: vec![identifier, 49, 50, 51, 52, 53, 54, 46, 55, 56, 57, 13, 10],
-                expected: RespDataTypeValue::Double(123_456.789),
+                expected: RespDataTypeValue::Double(OrderedFloat(123_456.789)),
             },
             TestCase {
                 // ,1.0\r\n
                 input: vec![identifier, 49, 46, 48, 13, 10],
-                expected: RespDataTypeValue::Double(1.0),
+                expected: RespDataTypeValue::Double(OrderedFloat(1.0)),
             },
             TestCase {
                 // ,0.0\r\n
                 input: vec![identifier, 48, 46, 48, 13, 10],
-                expected: RespDataTypeValue::Double(0.0),
+                expected: RespDataTypeValue::Double(OrderedFloat(0.0)),
             },
             TestCase {
                 // ,10\r\n
                 input: vec![identifier, 49, 48, 13, 10],
-                expected: RespDataTypeValue::Double(10.0),
+                expected: RespDataTypeValue::Double(OrderedFloat(10.0)),
             },
             TestCase {
                 // ,1e3\r\n
                 input: vec![identifier, 49, 101, 51, 13, 10],
-                expected: RespDataTypeValue::Double(1000.0),
+                expected: RespDataTypeValue::Double(OrderedFloat(1000.0)),
             },
             TestCase {
                 // ,-2.5e-3\r\n
                 input: vec![identifier, 45, 50, 46, 53, 101, 45, 51, 13, 10],
-                expected: RespDataTypeValue::Double(-0.0025),
+                expected: RespDataTypeValue::Double(OrderedFloat(-0.0025)),
             },
             TestCase {
                 // ,6.022e23\r\n
                 input: vec![identifier, 54, 46, 48, 50, 50, 101, 50, 51, 13, 10],
-                expected: RespDataTypeValue::Double(6.022e23),
+                expected: RespDataTypeValue::Double(OrderedFloat(6.022e23)),
             },
             TestCase {
                 // ,1E-7\r\n
                 input: vec![identifier, 49, 69, 45, 55, 13, 10],
-                expected: RespDataTypeValue::Double(1e-7),
+                expected: RespDataTypeValue::Double(OrderedFloat(1e-7)),
             },
             TestCase {
                 // ,-0\r\n
                 input: vec![identifier, 45, 48, 13, 10],
-                expected: RespDataTypeValue::Double(-0.0),
+                expected: RespDataTypeValue::Double(OrderedFloat(-0.0)),
             },
         ];
-
         for test_case in test_cases {
             let mut doubles = Doubles::new(&test_case.input);
             let result = doubles.build();

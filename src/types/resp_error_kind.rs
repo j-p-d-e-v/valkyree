@@ -1,8 +1,7 @@
+use crate::types::RespDataTypeValue;
 use serde::{Deserialize, Serialize};
 
-use crate::types::RespDataTypeValue;
-
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
 pub enum RespErrorKind {
     Err,         // Generic error
     WrongType,   // Operation against wrong data type
