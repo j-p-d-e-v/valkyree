@@ -21,6 +21,7 @@ impl<'a> RespDataTypeTrait<'a> for BulkStrings<'a> {
         if !id.is_bulk_strings() {
             return Err(anyhow!("NOT_BULK_STRINGS_TYPE"));
         }
+        self.length = start + 2;
         if length == 0 {
             return Ok(RespDataTypeValue::String("".to_string()));
         } else if length <= -1 {
@@ -28,7 +29,7 @@ impl<'a> RespDataTypeTrait<'a> for BulkStrings<'a> {
         }
         let end = start + length as usize;
         let data = String::from_utf8_lossy(&self.value[start..end]).to_string();
-        self.length = end + 2;
+        self.length += length as usize;
         Ok(RespDataTypeValue::String(data))
     }
 }

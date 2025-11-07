@@ -1,11 +1,11 @@
+use crate::builder::resp_data_type::RespDataTypeTrait;
+use crate::builder::resp_data_type::RespParser;
 use crate::builder::resp_data_type::helpers::get_resp_multi_values;
 use crate::builder::resp_data_type::helpers::is_cr;
 use crate::builder::resp_data_type::helpers::is_lf;
-use crate::builder::resp_data_type::RespDataTypeTrait;
-use crate::builder::resp_data_type::RespParser;
+use crate::types::RespDataTypeValue;
 use crate::types::resp_data_kind::RespDataType;
 use crate::types::resp_data_type_iter::RespDataTypeIterator;
-use crate::types::RespDataTypeValue;
 use anyhow::anyhow;
 
 #[derive(Debug)]
@@ -22,16 +22,14 @@ impl<'a> Arrays<'a> {
     ) -> anyhow::Result<bool> {
         let result = parser.parse()?;
         data.push(result);
+        self.length += parser.len();
         self.value = &self.value[parser.len()..];
         Ok(length == data.len() as isize)
     }
 }
 impl<'a> RespDataTypeTrait<'a> for Arrays<'a> {
     fn new(value: &'a [u8]) -> Self {
-        Self {
-            value,
-            length: value.len(),
-        }
+        Self { value, length: 0 }
     }
     fn len(&self) -> usize {
         self.length
@@ -42,6 +40,7 @@ impl<'a> RespDataTypeTrait<'a> for Arrays<'a> {
         if !main_id.is_arrays() {
             return Err(anyhow!("NOT_ARRAYS_TYPE"));
         }
+        self.length += start;
         let mut data: Vec<RespDataTypeValue> = Vec::new();
         if length > 0 {
             self.value = &self.value[start..];
@@ -57,7 +56,11 @@ impl<'a> RespDataTypeTrait<'a> for Arrays<'a> {
                 if id.is_arrays() {
                     let result = self.build()?;
                     data.push(result);
-                } else if id.is_bulk_strings() || id.is_verbatim_strings() || id.is_bulk_errors() {
+                } else if id.is_bulk_strings()
+                    || id.is_maps()
+                    || id.is_verbatim_strings()
+                    || id.is_bulk_errors()
+                {
                     let _ = self.set_data(&mut RespParser::new(self.value), &mut data, length)?;
                 } else {
                     let mut tmp_holder: Vec<u8> = Vec::new();

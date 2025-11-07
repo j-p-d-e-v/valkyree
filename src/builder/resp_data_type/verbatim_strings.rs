@@ -21,6 +21,7 @@ impl<'a> RespDataTypeTrait<'a> for VerbatimStrings<'a> {
         if !id.is_verbatim_strings() {
             return Err(anyhow!("NOT_VERBATIM_STRINGS_TYPE"));
         }
+        self.length = start + 2;
         if length == 0 {
             return Ok(RespDataTypeValue::String("".to_string()));
         } else if length <= -1 {
@@ -41,7 +42,7 @@ impl<'a> RespDataTypeTrait<'a> for VerbatimStrings<'a> {
         } else {
             String::new()
         };
-        self.length = end + 2;
+        self.length += length as usize;
         Ok(RespDataTypeValue::VerbatimString(message, encoding))
     }
 }
