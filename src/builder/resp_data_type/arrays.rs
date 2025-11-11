@@ -18,13 +18,12 @@ impl<'a> Arrays<'a> {
         &mut self,
         parser: &mut RespParser,
         data: &mut Vec<RespDataTypeValue>,
-        length: isize,
-    ) -> anyhow::Result<bool> {
+    ) -> anyhow::Result<()> {
         let result = parser.parse()?;
         data.push(result);
         self.length += parser.len();
         self.value = &self.value[parser.len()..];
-        Ok(length == data.len() as isize)
+        Ok(())
     }
 }
 impl<'a> RespDataTypeTrait<'a> for Arrays<'a> {
@@ -60,8 +59,9 @@ impl<'a> RespDataTypeTrait<'a> for Arrays<'a> {
                     || id.is_maps()
                     || id.is_verbatim_strings()
                     || id.is_bulk_errors()
+                    || id.is_sets()
                 {
-                    let _ = self.set_data(&mut RespParser::new(self.value), &mut data, length)?;
+                    let _ = self.set_data(&mut RespParser::new(self.value), &mut data)?;
                 } else {
                     let mut tmp_holder: Vec<u8> = Vec::new();
                     while let Some(v) = iter.next() {
@@ -75,21 +75,14 @@ impl<'a> RespDataTypeTrait<'a> for Arrays<'a> {
                             && let Some(mut next_values) = iter.nnext(1)
                         {
                             tmp_holder.append(&mut next_values);
-                            let is_break = self.set_data(
-                                &mut RespParser::new(&tmp_holder),
-                                &mut data,
-                                length,
-                            )?;
+                            let _ = self.set_data(&mut RespParser::new(&tmp_holder), &mut data)?;
                             tmp_holder = vec![];
-                            if is_break {
-                                break;
-                            }
+                            break;
                         }
                     }
 
                     if !tmp_holder.is_empty() {
-                        let _ =
-                            self.set_data(&mut RespParser::new(&tmp_holder), &mut data, length)?;
+                        let _ = self.set_data(&mut RespParser::new(&tmp_holder), &mut data)?;
                     }
                 }
                 if data.len() == length as usize {

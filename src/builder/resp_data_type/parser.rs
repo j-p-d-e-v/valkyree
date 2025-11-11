@@ -1,7 +1,8 @@
 use crate::builder::resp_data_type::arrays::Arrays;
+use crate::builder::resp_data_type::sets::Sets;
 use crate::builder::resp_data_type::{
-    BigNumbers, Booleans, BulkErrors, BulkStrings, Doubles, Integers, Nulls, RespDataTypeTrait,
-    VerbatimStrings,
+    BigNumbers, Booleans, BulkErrors, BulkStrings, Doubles, Integers, Maps, Nulls,
+    RespDataTypeTrait, VerbatimStrings,
 };
 use crate::types::RespDataTypeValue;
 use crate::{
@@ -52,7 +53,8 @@ impl<'a> RespParser<'a> {
             RespDataType::Arrays => self.builder(Arrays::new(value))?,
             RespDataType::BulkErrors => self.builder(BulkErrors::new(value))?,
             RespDataType::VerbatimStrings => self.builder(VerbatimStrings::new(value))?,
-            _ => return Err(anyhow!("not supported")),
+            RespDataType::Maps => self.builder(Maps::new(value))?,
+            RespDataType::Sets => self.builder(Sets::new(value))?,
         };
         Ok(value)
     }

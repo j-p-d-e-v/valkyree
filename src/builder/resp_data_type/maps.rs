@@ -62,6 +62,7 @@ impl<'a> RespDataTypeTrait<'a> for Maps<'a> {
                     || id.is_verbatim_strings()
                     || id.is_arrays()
                     || id.is_bulk_errors()
+                    || id.is_sets()
                 {
                     let _ = self.set_data(&mut RespParser::new(self.value), &mut kv_data)?;
                 } else {

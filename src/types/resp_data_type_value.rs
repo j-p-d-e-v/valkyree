@@ -14,6 +14,7 @@ pub enum RespDataTypeValue {
     Double(OrderedFloat<f64>),
     BigNumber(BigInt),
     Object(BTreeMap<RespDataTypeValue, RespDataTypeValue>),
+    Set(Vec<RespDataTypeValue>),
     Null,
     Infinity,
     NegativeInfinity,
@@ -21,6 +22,10 @@ pub enum RespDataTypeValue {
 }
 
 impl RespDataTypeValue {
+    pub fn is_set(&self) -> bool {
+        matches!(self, Self::Set(_))
+    }
+
     pub fn is_array(&self) -> bool {
         matches!(self, Self::Array(_))
     }

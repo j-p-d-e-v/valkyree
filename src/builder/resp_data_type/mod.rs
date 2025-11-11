@@ -9,6 +9,7 @@ pub mod integers;
 pub mod maps;
 pub mod nulls;
 pub mod parser;
+pub mod sets;
 pub mod simple_errors;
 pub mod simple_strings;
 pub mod verbatim_strings;

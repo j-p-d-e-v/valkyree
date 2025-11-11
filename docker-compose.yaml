@@ -1,0 +1,9 @@
+services:
+  valkey_server:
+    image: valkey/valkey
+    tty: true
+    command: valkey-server /valkey/valkey-config.conf
+    ports:
+      - 6379:6379
+    volumes:
+      - ./valkey-server.conf:/valkey/valkey-config.conf

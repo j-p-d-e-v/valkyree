@@ -15,9 +15,14 @@ pub enum RespDataType {
     BulkErrors,
     VerbatimStrings,
     Maps,
+    Sets,
 }
 
 impl RespDataType {
+    pub fn is_sets(&self) -> bool {
+        matches!(self, Self::Sets)
+    }
+
     pub fn is_maps(&self) -> bool {
         matches!(self, Self::Maps)
     }
@@ -93,8 +98,9 @@ impl RespDataType {
             33 => Self::BulkErrors,
             61 => Self::VerbatimStrings,
             37 => Self::Maps,
+            126 => Self::Sets,
             _ => {
-                return Err(anyhow!("NOT_SUPPORTED"));
+                return Err(anyhow!("RESP_DATA_KIND_NOT_SUPPORTED"));
             }
         };
         Ok(value)
@@ -115,6 +121,7 @@ impl RespDataType {
             Self::BulkErrors => 33,
             Self::Maps => 37,
             Self::VerbatimStrings => 61,
+            Self::Sets => 126,
         };
         Ok(value)
     }
