@@ -61,7 +61,7 @@ impl<'a> RespDataTypeTrait<'a> for Arrays<'a> {
                     || id.is_bulk_errors()
                     || id.is_sets()
                 {
-                    let _ = self.set_data(&mut RespParser::new(self.value), &mut data)?;
+                    self.set_data(&mut RespParser::new(self.value), &mut data)?;
                 } else {
                     let mut tmp_holder: Vec<u8> = Vec::new();
                     while let Some(v) = iter.next() {
@@ -75,14 +75,14 @@ impl<'a> RespDataTypeTrait<'a> for Arrays<'a> {
                             && let Some(mut next_values) = iter.nnext(1)
                         {
                             tmp_holder.append(&mut next_values);
-                            let _ = self.set_data(&mut RespParser::new(&tmp_holder), &mut data)?;
+                            self.set_data(&mut RespParser::new(&tmp_holder), &mut data)?;
                             tmp_holder = vec![];
                             break;
                         }
                     }
 
                     if !tmp_holder.is_empty() {
-                        let _ = self.set_data(&mut RespParser::new(&tmp_holder), &mut data)?;
+                        self.set_data(&mut RespParser::new(&tmp_holder), &mut data)?;
                     }
                 }
                 if data.len() == length as usize {

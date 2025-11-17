@@ -54,7 +54,6 @@ impl<'a> RespDataTypeTrait<'a> for Maps<'a> {
                     return Err(anyhow!("INVALID_RESP_TYPE_ID"));
                 };
                 let mut iter = RespDataTypeIterator::new(self.value);
-
                 if id.is_maps() {
                     let result = self.build()?;
                     kv_data.push(result);
@@ -64,7 +63,7 @@ impl<'a> RespDataTypeTrait<'a> for Maps<'a> {
                     || id.is_bulk_errors()
                     || id.is_sets()
                 {
-                    let _ = self.set_data(&mut RespParser::new(self.value), &mut kv_data)?;
+                    self.set_data(&mut RespParser::new(self.value), &mut kv_data)?;
                 } else {
                     let mut tmp_holder: Vec<u8> = Vec::new();
                     while let Some(v) = iter.next() {
@@ -78,17 +77,17 @@ impl<'a> RespDataTypeTrait<'a> for Maps<'a> {
                             && let Some(mut next_values) = iter.nnext(1)
                         {
                             tmp_holder.append(&mut next_values);
-                            let _ =
-                                self.set_data(&mut RespParser::new(&tmp_holder), &mut kv_data)?;
+
+                            self.set_data(&mut RespParser::new(&tmp_holder), &mut kv_data)?;
                             tmp_holder = vec![];
                             break;
                         }
                     }
                     if !tmp_holder.is_empty() {
-                        let _ = self.set_data(&mut RespParser::new(&tmp_holder), &mut kv_data)?;
+                        self.set_data(&mut RespParser::new(&tmp_holder), &mut kv_data)?;
                     }
                 }
-                if let Some(key) = kv_data.get(0)
+                if let Some(key) = kv_data.first()
                     && let Some(value) = kv_data.get(1)
                 {
                     let total_keys = data.keys().filter(|k| k == &key).count();

@@ -29,7 +29,7 @@ impl<'a> Sets<'a> {
         Ok(())
     }
 
-    fn is_value_exists(&self, data: &Vec<RespDataTypeValue>, value: &RespDataTypeValue) -> bool {
+    fn is_value_exists(&self, data: &[RespDataTypeValue], value: &RespDataTypeValue) -> bool {
         data.contains(value)
     }
 }
@@ -69,7 +69,7 @@ impl<'a> RespDataTypeTrait<'a> for Sets<'a> {
                     || id.is_bulk_errors()
                     || id.is_arrays()
                 {
-                    let _ = self.set_data(&mut RespParser::new(self.value), &mut data)?;
+                    self.set_data(&mut RespParser::new(self.value), &mut data)?;
                 } else {
                     let mut tmp_holder: Vec<u8> = Vec::new();
                     while let Some(v) = iter.next() {
@@ -84,14 +84,14 @@ impl<'a> RespDataTypeTrait<'a> for Sets<'a> {
                         {
                             tmp_holder.append(&mut next_values);
 
-                            let _ = self.set_data(&mut RespParser::new(&tmp_holder), &mut data)?;
+                            self.set_data(&mut RespParser::new(&tmp_holder), &mut data)?;
                             tmp_holder = vec![];
                             break;
                         }
                     }
 
                     if !tmp_holder.is_empty() {
-                        let _ = self.set_data(&mut RespParser::new(&tmp_holder), &mut data)?;
+                        self.set_data(&mut RespParser::new(&tmp_holder), &mut data)?;
                     }
                 }
                 if data.len() == length as usize {

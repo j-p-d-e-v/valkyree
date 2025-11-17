@@ -15,6 +15,7 @@ pub enum RespDataTypeValue {
     BigNumber(BigInt),
     Object(BTreeMap<RespDataTypeValue, RespDataTypeValue>),
     Set(Vec<RespDataTypeValue>),
+    Push(Vec<RespDataTypeValue>),
     Null,
     Infinity,
     NegativeInfinity,

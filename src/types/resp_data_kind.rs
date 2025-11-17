@@ -16,9 +16,14 @@ pub enum RespDataType {
     VerbatimStrings,
     Maps,
     Sets,
+    Pushes,
 }
 
 impl RespDataType {
+    pub fn is_pushes(&self) -> bool {
+        matches!(self, Self::Pushes)
+    }
+
     pub fn is_sets(&self) -> bool {
         matches!(self, Self::Sets)
     }
@@ -99,6 +104,7 @@ impl RespDataType {
             61 => Self::VerbatimStrings,
             37 => Self::Maps,
             126 => Self::Sets,
+            62 => Self::Pushes,
             _ => {
                 return Err(anyhow!("RESP_DATA_KIND_NOT_SUPPORTED"));
             }
@@ -122,6 +128,7 @@ impl RespDataType {
             Self::Maps => 37,
             Self::VerbatimStrings => 61,
             Self::Sets => 126,
+            Self::Pushes => 62,
         };
         Ok(value)
     }
